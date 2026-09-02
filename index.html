@@ -52,8 +52,10 @@
     font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
     color:var(--text-3); margin:0 0 10px; font-weight:500;
   }
+  .section-label.with-arrow{display:flex; align-items:center; justify-content:space-between; cursor:pointer;}
+  .section-label .arrow{transition:transform 0.15s;}
+  .section-label .arrow.open{transform:rotate(180deg);}
 
-  /* subject chips - wraps, never hidden off-screen */
   .chip-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;}
   .chip{
     flex:0 0 auto; display:flex; align-items:center; gap:6px;
@@ -65,9 +67,8 @@
   .chip.active{border-color:var(--dot-color, var(--accent)); color:var(--text); background:var(--surface-2);}
   .chip.add-chip{color:var(--accent); border-style:dashed;}
 
-  /* mode + timer */
-  .period-row{display:flex; gap:6px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:3px; margin-bottom:14px;}
-  .period-btn{flex:1; border:none; background:transparent; color:var(--text-2); font-size:13px; padding:8px 0; border-radius:6px; cursor:pointer; font-family:'Inter';}
+  .period-row{display:flex; gap:4px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:3px; margin-bottom:14px;}
+  .period-btn{flex:1; border:none; background:transparent; color:var(--text-2); font-size:12.5px; padding:8px 0; border-radius:6px; cursor:pointer; font-family:'Inter';}
   .period-btn.active{background:var(--accent); color:#1A1409; font-weight:600;}
   .period-btn:disabled{opacity:0.4;}
 
@@ -118,13 +119,16 @@
   .insight-card.urgent{border-left-color:var(--danger);}
   .insight-label{display:flex; align-items:center; gap:6px; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
   .insight-card.urgent .insight-label{color:var(--danger);}
-  .insight-text{font-size:13.5px; line-height:1.6; color:var(--text);}
+  .insight-text{font-size:13.5px; line-height:1.6; color:var(--text); white-space:pre-line;}
 
   .ask-shruti-btn{width:100%; margin-top:10px; font-size:13px; padding:10px 0;}
   .quick-q-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
   .quick-q{font-size:12px; padding:7px 12px; border-radius:16px; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text-2); cursor:pointer;}
-  .shruti-answer{margin-top:12px; font-size:13.5px; line-height:1.6; background:var(--surface-2); border-radius:8px; padding:12px 14px; display:none;}
+  .shruti-answer{margin-top:12px; font-size:13.5px; line-height:1.6; background:var(--surface-2); border-radius:8px; padding:12px 14px; display:none; white-space:pre-line;}
   .shruti-answer.show{display:block;}
+  .routine-inline{display:none; gap:8px; margin-top:10px; align-items:center;}
+  .routine-inline.open{display:flex;}
+  .routine-inline input{width:70px; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text); border-radius:6px; padding:7px 8px; font-family:'IBM Plex Mono',monospace; font-size:13px;}
 
   .stat-hero{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:2px;}
   .stat-hero .val{font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:500;}
@@ -137,20 +141,34 @@
     background-image:linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
     background-size:100% 25%, 12.5% 100%; background-position:0 0;
   }
+  .chart-hint{font-size:11px; color:var(--text-3); text-align:center; margin:-8px 0 10px;}
 
   .legend-row{display:flex; flex-wrap:wrap; gap:12px; font-size:11.5px; color:var(--text-2); margin-bottom:6px;}
   .legend-row span{display:flex; align-items:center; gap:5px;}
   .legend-row .dot{width:9px; height:9px; border-radius:2px;}
+
+  .breakdown-list{list-style:none; margin:0 0 16px; padding:0; background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden;}
+  .breakdown-list li{display:flex; align-items:center; justify-content:space-between; padding:10px 14px; font-size:13px; border-bottom:1px solid var(--border);}
+  .breakdown-list li:last-child{border-bottom:none;}
+  .breakdown-list .bd-left{display:flex; align-items:center; gap:8px; color:var(--text-2);}
+  .breakdown-list .dot{width:9px; height:9px; border-radius:50%;}
+  .breakdown-head{font-size:11.5px; color:var(--text-3); padding:10px 14px 0;}
 
   .metric-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;}
   .metric{background:var(--surface-2); border-radius:8px; padding:12px 14px;}
   .metric .m-label{font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;}
   .metric .m-val{font-family:'IBM Plex Mono',monospace; font-size:18px;}
 
-  .punchcard{display:flex; gap:5px; margin-top:10px;}
+  .punch-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+  .punch-nav{background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text-2); border-radius:6px; padding:4px 10px; font-size:13px; cursor:pointer;}
+  .punch-nav:disabled{opacity:0.3;}
+  .punch-range{font-size:11px; color:var(--text-3); font-family:'IBM Plex Mono',monospace;}
+  .punchcard{display:flex; gap:5px;}
   .punch{width:100%; aspect-ratio:1; border-radius:3px; background:var(--surface-3); border:1px solid var(--border-strong);}
   .punch.filled{background:var(--accent); border-color:var(--accent);}
   .punch.today{box-shadow:0 0 0 2px var(--accent-dim);}
+  .streak-stats{display:flex; justify-content:space-between; margin-top:12px; font-size:12.5px; color:var(--text-2);}
+  .streak-stats b{color:var(--text); font-family:'IBM Plex Mono',monospace; font-weight:500;}
 
   .goal-row{display:flex; align-items:center; gap:16px;}
   .ring-wrap{position:relative; width:64px; height:64px; flex:0 0 auto;}
@@ -162,6 +180,18 @@
     border-radius:6px; padding:6px 8px; font-family:'IBM Plex Mono',monospace; font-size:13px;
   }
 
+  .compare-sort{background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text); border-radius:6px; padding:6px 8px; font-size:12px; font-family:'Inter';}
+  .compare-row{display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .compare-row:last-child{border-bottom:none;}
+  .compare-row.best{color:var(--accent);}
+  .compare-row .cr-date{color:var(--text-2); font-family:'IBM Plex Mono',monospace; font-size:12px;}
+  .best-tag{font-size:9.5px; text-transform:uppercase; letter-spacing:0.5px; background:var(--accent-dim); color:var(--accent); padding:2px 6px; border-radius:8px; margin-left:6px;}
+
+  .log-filter-row{display:flex; gap:8px; margin-bottom:16px;}
+  .log-filter-row input[type=date]{
+    flex:1; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text);
+    border-radius:8px; padding:9px 10px; font-family:'Inter'; font-size:13px;
+  }
   .log-date-group{margin-bottom:18px;}
   .log-date-head{font-size:12px; color:var(--text-3); letter-spacing:0.5px; margin-bottom:8px; font-family:'IBM Plex Mono',monospace;}
   .log-entry{
@@ -193,7 +223,6 @@
   .swatch{width:24px; height:24px; border-radius:50%; cursor:pointer; border:2px solid transparent;}
   .swatch.sel{border-color:var(--text);}
 
-  /* plan tab */
   .type-row{display:flex; gap:6px;}
   .type-btn{flex:1; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--text-2); font-size:12px; padding:8px 0; border-radius:6px; cursor:pointer;}
   .type-btn.active{background:var(--accent); color:#1A1409; border-color:var(--accent); font-weight:600;}
@@ -210,13 +239,26 @@
   .plan-badge.homework{background:var(--accent-dim); color:var(--accent);}
   .add-plan-form{display:none; flex-direction:column; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; margin-top:10px;}
   .add-plan-form.open{display:flex;}
-  .add-plan-form input[type=text], .add-plan-form input[type=date]{
+  .add-plan-form input[type=text], .add-plan-form input[type=date], .add-plan-form input[type=time], .add-plan-form input[type=number], .add-plan-form select{
     background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text);
     border-radius:6px; padding:9px 10px; font-family:'Inter'; font-size:13px; width:100%;
   }
+  .field-row{display:flex; gap:8px;}
+  .field-row > *{flex:1;}
+  .field-label{font-size:11px; color:var(--text-3); margin-bottom:-4px;}
   .notif-row{display:flex; align-items:center; justify-content:space-between; font-size:12.5px; color:var(--text-2);}
 
-  /* streak popup */
+  .busy-entry{
+    background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px;
+    margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .busy-entry .be-info .title{font-size:13px; font-weight:500;}
+  .busy-entry .be-info .meta{font-size:11.5px; color:var(--text-3);}
+  .day-toggle-row{display:flex; gap:4px; flex-wrap:wrap;}
+  .day-toggle{width:36px; height:32px; border-radius:6px; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--text-2); font-size:11px; cursor:pointer;}
+  .day-toggle.active{background:var(--accent); color:#1A1409; border-color:var(--accent); font-weight:600;}
+  .suggest-card{background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--success); border-radius:10px; padding:14px 16px;}
+
   .modal-backdrop{
     position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center;
     z-index:100; padding:24px;
@@ -229,7 +271,14 @@
   .modal-streak{font-family:'IBM Plex Mono',monospace; font-size:34px; font-weight:600; color:var(--accent); margin:4px 0;}
   .modal-sub{font-size:13px; color:var(--text-2); margin-bottom:20px; line-height:1.5;}
 
-  /* tabbar */
+  .toast{
+    position:fixed; left:50%; bottom:96px; transform:translate(-50%, 20px); opacity:0;
+    max-width:380px; width:calc(100% - 40px); background:var(--surface-2); border:1px solid var(--accent);
+    border-radius:12px; padding:12px 16px; font-size:13px; text-align:center; z-index:90;
+    transition:all 0.25s ease; pointer-events:none;
+  }
+  .toast.show{opacity:1; transform:translate(-50%, 0);}
+
   .tabbar{
     position:fixed; bottom:0; left:50%; transform:translateX(-50%);
     width:100%; max-width:440px; display:flex; background:var(--surface);
@@ -251,9 +300,10 @@
 <div class="app" id="app">
   <div class="loading" id="loadingScreen">loading log&hellip;</div>
 </div>
+<div class="toast" id="toast"></div>
 
 <script>
-const STORAGE_KEYS = { subjects:'subjects', sessions:'sessions', settings:'settings', events:'events', lastPopup:'lastPopup' };
+const STORAGE_KEYS = { subjects:'subjects', sessions:'sessions', settings:'settings', events:'events', lastPopup:'lastPopup', activeTimer:'activeTimer', busyBlocks:'busyBlocks' };
 const DEFAULT_SUBJECTS = [
   {id:'math', name:'Math', color:'#5B7FA6'},
   {id:'chem', name:'Chemistry', color:'#C97A56'},
@@ -261,36 +311,84 @@ const DEFAULT_SUBJECTS = [
   {id:'lang', name:'Language', color:'#8B6B9E'}
 ];
 const SWATCH_COLORS = ['#5B7FA6','#C97A56','#4C9A8E','#8B6B9E','#C9A227','#B85C7A','#6B8E4E','#6E7A8A'];
-const DEFAULT_SETTINGS = { dailyGoalMin: 120, timerMode:'stopwatch', focusMin: 25, breakMin: 5, notifyEnabled:false };
+const DEFAULT_SETTINGS = { dailyGoalMin: 120, timerMode:'stopwatch', focusMin: 25, breakMin: 5, notifyEnabled:false, soundEnabled:true, studyWindowStart:'16:00', studyWindowEnd:'23:00' };
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-let state = { subjects: [], sessions: [], settings: {...DEFAULT_SETTINGS}, events: [] };
+let state = { subjects: [], sessions: [], settings: {...DEFAULT_SETTINGS}, events: [], busyBlocks: [] };
 let activeSubjectId = null;
 let activeTab = 'track';
 let activePeriod = 'day';
 let activePlanType = 'exam';
+let activeBusyDay = 1;
 let trendsChart = null;
+let currentBuckets = [];
+let punchOffset = 0;
+let compareSortMode = 'new-old';
+let allTimeExpanded = false;
+let pendingCompletionOnLoad = false;
 
-/* ---------- storage (real browser localStorage - persists on GitHub Pages / any host) ---------- */
+/* ---------- storage ---------- */
 function storageGet(key, fallback){
-  try{
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  }catch(e){ console.error('read failed', key, e); return fallback; }
+  try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+  catch(e){ console.error('read failed', key, e); return fallback; }
 }
 function storageSet(key, value){
   try{ localStorage.setItem(key, JSON.stringify(value)); return true; }
   catch(e){ console.error('save failed', key, e); return false; }
 }
 
-/* ---------- timer state machine: ONE persistent interval, gated by phase ---------- */
+/* ---------- sound ---------- */
+let startSoundEl = null;
+function playStartSound(){
+  if(!state.settings.soundEnabled) return;
+  try{
+    if(!startSoundEl) startSoundEl = new Audio('sound-start.mp3');
+    startSoundEl.currentTime = 0;
+    startSoundEl.play().catch(function(){});
+  }catch(e){}
+}
+let audioCtx = null;
+function beep(freq, dur, vol){
+  if(!state.settings.soundEnabled) return;
+  freq = freq||660; dur = dur||150; vol = vol||0.16;
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.value = freq; osc.type='sine';
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur/1000);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + dur/1000);
+  }catch(e){}
+}
+function beepPattern(notes){
+  let t = 0;
+  notes.forEach(function(n){ setTimeout(function(){ beep(n[0], n[1]); }, t); t += n[2]||n[1]+40; });
+}
+
+/* ---------- timer state machine: crash-proof via persisted absolute checkpoints ---------- */
 let timer = { mode:'stopwatch', phase:'idle', isBreak:false, elapsedSec:0, targetSec:0, lastTick:null };
-setInterval(()=>{
+
+function persistActiveTimer(){
+  if(timer.phase==='idle'){ localStorage.removeItem(STORAGE_KEYS.activeTimer); return; }
+  storageSet(STORAGE_KEYS.activeTimer, {
+    subjectId: activeSubjectId, mode: timer.mode, isBreak: timer.isBreak,
+    targetSec: timer.targetSec, elapsedSec: timer.elapsedSec, phase: timer.phase,
+    savedAt: Date.now()
+  });
+}
+function clearActiveTimer(){ localStorage.removeItem(STORAGE_KEYS.activeTimer); }
+
+setInterval(function(){
   if(timer.phase !== 'running' || timer.lastTick == null) return;
   const now = Date.now();
   const delta = Math.floor((now - timer.lastTick)/1000);
   if(delta < 1) return;
   timer.lastTick += delta*1000;
   timer.elapsedSec += delta;
+  persistActiveTimer();
   if(timer.mode !== 'stopwatch' && timer.elapsedSec >= timer.targetSec){
     timer.elapsedSec = timer.targetSec;
     updateTimerDisplay();
@@ -307,7 +405,7 @@ function todayStr(){ return fmtDate(new Date()); }
 function daysAgoStr(n){ const d=new Date(); d.setDate(d.getDate()-n); return fmtDate(d); }
 function daysFromNowStr(n){ const d=new Date(); d.setDate(d.getDate()+n); return fmtDate(d); }
 function minutesToH(min){ return (min/60).toFixed(1)+'h'; }
-function subjectById(id){ return state.subjects.find(s=>s.id===id); }
+function subjectById(id){ return state.subjects.find(function(s){ return s.id===id; }); }
 function formatElapsed(totalSeconds){
   totalSeconds = Math.max(0, totalSeconds);
   const h = Math.floor(totalSeconds/3600);
@@ -315,9 +413,14 @@ function formatElapsed(totalSeconds){
   const s = totalSeconds%60;
   return h>0 ? (h+':'+pad(m)+':'+pad(s)) : (pad(m)+':'+pad(s));
 }
+function fmtTimeLabel(hhmm){
+  const parts = hhmm.split(':'); let h = parseInt(parts[0],10); const m = parts[1];
+  const ap = h>=12?'pm':'am'; h = h%12; if(h===0) h=12;
+  return h+':'+m+ap;
+}
 
 function calcStreak(){
-  const dateSet = new Set(state.sessions.map(s=>fmtDate(s.start)));
+  const dateSet = new Set(state.sessions.map(function(s){ return fmtDate(s.start); }));
   let streak=0;
   let cursor = new Date();
   if(!dateSet.has(fmtDate(cursor))) cursor.setDate(cursor.getDate()-1);
@@ -328,17 +431,52 @@ function calcStreak(){
   return streak;
 }
 
+function showToast(msg, ms){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(function(){ t.classList.remove('show'); }, ms||3500);
+}
+
+/* ---------- init with crash-recovery ---------- */
 function init(){
   state.subjects = storageGet(STORAGE_KEYS.subjects, DEFAULT_SUBJECTS);
   if(!state.subjects.length) state.subjects = DEFAULT_SUBJECTS;
   state.sessions = storageGet(STORAGE_KEYS.sessions, []);
   state.settings = {...DEFAULT_SETTINGS, ...storageGet(STORAGE_KEYS.settings, {})};
   state.events = storageGet(STORAGE_KEYS.events, []);
+  state.busyBlocks = storageGet(STORAGE_KEYS.busyBlocks, []);
   timer.mode = state.settings.timerMode || 'stopwatch';
   activeSubjectId = state.subjects[0] ? state.subjects[0].id : null;
 
+  const active = storageGet(STORAGE_KEYS.activeTimer, null);
+  if(active && subjectById(active.subjectId)){
+    activeSubjectId = active.subjectId;
+    timer.mode = active.mode; timer.isBreak = !!active.isBreak; timer.targetSec = active.targetSec||0;
+    let elapsed = active.elapsedSec||0;
+    if(active.phase === 'running'){
+      elapsed += Math.max(0, Math.floor((Date.now() - active.savedAt)/1000));
+    }
+    if(timer.mode !== 'stopwatch' && elapsed >= timer.targetSec && timer.targetSec>0){
+      timer.elapsedSec = timer.targetSec;
+      timer.phase = 'running';
+      timer.lastTick = Date.now();
+      pendingCompletionOnLoad = true;
+    } else {
+      timer.elapsedSec = Math.max(0, elapsed);
+      timer.phase = active.phase === 'paused' ? 'paused' : 'running';
+      timer.lastTick = Date.now();
+    }
+  }
+
   buildShell();
-  renderAll();
+  if(pendingCompletionOnLoad){
+    pendingCompletionOnLoad = false;
+    handleTimerComplete();
+  } else {
+    renderAll();
+  }
   maybeShowStreakPopup();
   maybeNotifyUpcoming();
 }
@@ -430,6 +568,7 @@ function renderTrack(){
     '<button class="btn btn-ghost ask-shruti-btn" id="askShrutiBtn">Ask Shruti</button>' +
     '<div id="quickQPanel" style="display:none;">' +
       '<div class="quick-q-row" id="quickQRow"></div>' +
+      '<div class="routine-inline" id="routineInline"><input type="number" id="routineMinInput" value="90" min="10" max="600"><span style="font-size:12px; color:var(--text-2);">min available</span><button class="btn btn-primary" id="routineGoBtn" style="font-size:12px; padding:7px 12px;">Build it</button></div>' +
       '<div class="shruti-answer" id="shrutiAnswer"></div>' +
     '</div>';
 
@@ -512,7 +651,13 @@ function updateTimerButtons(){
   } else {
     startBtn.style.display='none'; pauseBtn.style.display=''; stopBtn.style.display='';
     pauseBtn.textContent = timer.phase==='running' ? 'Pause' : 'Resume';
-    hint.textContent = timer.phase==='running' ? (timer.isBreak ? 'Break time.' : 'Session in progress.') : 'Paused.';
+    if(timer.phase==='running'){
+      hint.textContent = timer.isBreak ? 'Break time.' : 'Session in progress.';
+    } else if(timer.elapsedSec===0 && timer.mode==='pomodoro'){
+      hint.textContent = timer.isBreak ? 'Break ready \u2014 tap Resume to start it.' : 'Next focus block ready \u2014 tap Resume.';
+    } else {
+      hint.textContent = 'Paused.';
+    }
   }
 }
 
@@ -542,53 +687,95 @@ function startTimer(){
   timer.targetSec = timer.mode==='stopwatch' ? 0 : state.settings.focusMin*60;
   timer.phase = 'running';
   timer.lastTick = Date.now();
+  persistActiveTimer();
+  playStartSound();
   updateTimerButtons();
   updateTimerDisplay();
 }
 function pauseTimer(){
   if(timer.phase !== 'running') return;
   timer.phase = 'paused';
+  persistActiveTimer();
   updateTimerButtons();
 }
 function resumeTimer(){
   if(timer.phase !== 'paused') return;
   timer.phase = 'running';
   timer.lastTick = Date.now();
+  persistActiveTimer();
   updateTimerButtons();
 }
 function stopTimer(){
   const durationMin = Math.round(timer.elapsedSec/60);
+  let logged = false;
   if(durationMin >= 1 && !timer.isBreak){
     const end = Date.now();
     const start = end - timer.elapsedSec*1000;
     state.sessions.push({ id:'s'+Date.now(), subjectId: activeSubjectId, start, end, durationMin });
     storageSet(STORAGE_KEYS.sessions, state.sessions);
+    logged = true;
   }
   timer.phase='idle'; timer.elapsedSec=0; timer.targetSec=0; timer.lastTick=null; timer.isBreak=false;
+  clearActiveTimer();
+  beep(440,220);
+  if(logged) checkLadderProgress();
   renderAll();
 }
 function handleTimerComplete(){
   const durationMin = Math.round(timer.elapsedSec/60);
+  let logged = false;
   if(durationMin >= 1 && !timer.isBreak){
     const end = Date.now();
     const start = end - timer.elapsedSec*1000;
     state.sessions.push({ id:'s'+Date.now(), subjectId: activeSubjectId, start, end, durationMin });
     storageSet(STORAGE_KEYS.sessions, state.sessions);
+    logged = true;
   }
   if(timer.mode === 'pomodoro'){
     timer.isBreak = !timer.isBreak;
     timer.elapsedSec = 0;
     timer.targetSec = timer.isBreak ? state.settings.breakMin*60 : state.settings.focusMin*60;
     timer.phase = 'paused';
-    notifyLocal('Study Log', timer.isBreak ? 'Focus block done \u2014 take a ' + state.settings.breakMin + ' min break.' : 'Break\u2019s over \u2014 tap Resume for the next focus block.');
+    clearActiveTimer();
+    if(timer.isBreak){ beepPattern([[880,120],[880,120]]); notifyLocal('Study Log', 'Focus block done \u2014 take a ' + state.settings.breakMin + ' min break.'); }
+    else { beepPattern([[660,150]]); notifyLocal('Study Log', 'Break\u2019s over \u2014 tap Resume for the next focus block.'); }
   } else {
     timer.phase='idle'; timer.elapsedSec=0; timer.targetSec=0; timer.lastTick=null;
+    clearActiveTimer();
+    beepPattern([[660,140],[880,220]]);
     notifyLocal('Study Log', 'Timer complete.');
   }
+  if(logged) checkLadderProgress();
   renderAll();
 }
 
-/* Shruti insight - checks upcoming exams/homework first, then study patterns */
+/* ---------- personal-record ladder ---------- */
+function checkLadderProgress(){
+  const todayS = todayStr();
+  const todayTotal = state.sessions.filter(function(s){ return fmtDate(s.start)===todayS; }).reduce(function(a,s){ return a+s.durationMin; },0);
+  const byDay = {};
+  state.sessions.forEach(function(s){ const d=fmtDate(s.start); if(d!==todayS) byDay[d]=(byDay[d]||0)+s.durationMin; });
+  const ladder = Object.values(byDay).sort(function(a,b){ return a-b; });
+  if(ladder.length===0) return;
+  const rungsBeaten = ladder.filter(function(v){ return todayTotal > v; }).length;
+  const key = 'ladderRungsBeaten_'+todayS;
+  const prevBeaten = parseInt(localStorage.getItem(key)||'0',10);
+  if(rungsBeaten > prevBeaten){
+    localStorage.setItem(key, String(rungsBeaten));
+    const isBest = todayTotal > ladder[ladder.length-1];
+    if(isBest){
+      showToast('\uD83C\uDFC6 New personal best day \u2014 ' + minutesToH(todayTotal) + '!', 4500);
+    }else{
+      showToast('\uD83D\uDE80 You just beat your ' + ordinal(ladder.length - rungsBeaten + 1) + ' lowest study day!', 4000);
+    }
+  }
+}
+function ordinal(n){
+  const s=['th','st','nd','rd']; const v=n%100;
+  return n + (s[(v-20)%10]||s[v]||s[0]);
+}
+
+/* Shruti insight */
 function renderInsight(){
   const card = document.getElementById('insightCard');
   const todayS = todayStr(), tomorrowS = daysFromNowStr(1);
@@ -600,7 +787,8 @@ function renderInsight(){
     const e = urgent[0];
     const subj = subjectById(e.subjectId);
     const when = e.date===todayS ? 'today' : 'tomorrow';
-    text = (subj?subj.name:'Your') + ' ' + e.type + ' \u201c' + e.title + '\u201d is ' + when + '. ' + (e.type==='exam' ? 'Good time to review it.' : 'Make sure it\u2019s done in time.');
+    const timeStr = e.time ? (' at ' + fmtTimeLabel(e.time)) : '';
+    text = (subj?subj.name:'Your') + ' ' + e.type + ' \u201c' + e.title + '\u201d is ' + when + timeStr + '. ' + (e.type==='exam' ? 'Good time to review it.' : 'Make sure it\u2019s done in time.');
     isUrgent = true;
   } else {
     const todayMin = state.sessions.filter(function(s){ return fmtDate(s.start)===todayStr(); }).reduce(function(a,s){ return a+s.durationMin; },0);
@@ -638,22 +826,42 @@ function setupQuickQuestions(){
   const panel = document.getElementById('quickQPanel');
   const row = document.getElementById('quickQRow');
   const answerBox = document.getElementById('shrutiAnswer');
+  const routineInline = document.getElementById('routineInline');
   const questions = [
     { q:'How am I doing this week?', a: shrutiWeekAnswer },
     { q:'What should I study today?', a: shrutiTodayAnswer },
     { q:'Any exams or homework coming up?', a: shrutiUpcomingAnswer },
-    { q:'How\u2019s my streak?', a: shrutiStreakAnswer }
+    { q:'How\u2019s my streak?', a: shrutiStreakAnswer },
+    { q:'What\u2019s my best day ever?', a: shrutiBestDayAnswer },
+    { q:'Am I neglecting a subject?', a: shrutiNeglectAnswer },
+    { q:'How consistent have I been?', a: shrutiConsistencyAnswer },
+    { q:'Build me a routine', a: null, routine: true }
   ];
   row.innerHTML = questions.map(function(item,i){ return '<button class="quick-q" data-i="' + i + '">' + item.q + '</button>'; }).join('');
   row.querySelectorAll('.quick-q').forEach(function(b){
     b.addEventListener('click', function(){
-      answerBox.textContent = questions[parseInt(b.dataset.i,10)].a();
+      const item = questions[parseInt(b.dataset.i,10)];
+      if(item.routine){
+        routineInline.classList.add('open');
+        answerBox.classList.remove('show');
+        return;
+      }
+      routineInline.classList.remove('open');
+      answerBox.textContent = item.a();
       answerBox.classList.add('show');
     });
   });
+  document.getElementById('routineGoBtn').onclick = function(){
+    const mins = parseInt(document.getElementById('routineMinInput').value,10) || 60;
+    answerBox.textContent = shrutiBuildRoutine(mins);
+    answerBox.classList.add('show');
+  };
   btn.onclick = function(){
     panel.style.display = panel.style.display==='none' ? 'block' : 'none';
   };
+}
+function sumForRange(startDate, endDate){
+  return state.sessions.filter(function(s){ const d=fmtDate(s.start); return d>=startDate && d<=endDate; }).reduce(function(a,s){ return a+s.durationMin; },0);
 }
 function shrutiWeekAnswer(){
   const thisWeek = sumForRange(daysAgoStr(6), todayStr());
@@ -662,6 +870,12 @@ function shrutiWeekAnswer(){
   if(lastWeek===0) return 'You\u2019ve logged ' + minutesToH(thisWeek) + ' this week. No comparison yet for last week.';
   const pct = Math.round(((thisWeek-lastWeek)/lastWeek)*100);
   return 'You\u2019ve logged ' + minutesToH(thisWeek) + ' this week, ' + (pct>=0?'up ':'down ') + Math.abs(pct) + '% vs last week.';
+}
+function suggestedStudyMinutesToday(){
+  const win = studyWindowMinutesToday();
+  const busyToday = busyMinutesForDate(new Date());
+  const free = Math.max(0, win - busyToday);
+  return Math.min(480, Math.max(240, free>0?free:240));
 }
 function shrutiTodayAnswer(){
   const todayS = todayStr(), tomorrowS = daysFromNowStr(1);
@@ -682,8 +896,8 @@ function shrutiUpcomingAnswer(){
   if(!upcoming.length) return 'Nothing logged yet \u2014 add an exam or homework entry in the Plan tab.';
   return upcoming.map(function(e){
     const subj = subjectById(e.subjectId);
-    return (subj?subj.name:'') + ' ' + e.type + ': ' + e.title + ' (' + e.date + ')';
-  }).join('  \u2022  ');
+    return (subj?subj.name:'') + ' ' + e.type + ': ' + e.title + ' (' + e.date + (e.time?' '+fmtTimeLabel(e.time):'') + ')';
+  }).join('\n');
 }
 function shrutiStreakAnswer(){
   const streak = calcStreak();
@@ -692,32 +906,118 @@ function shrutiStreakAnswer(){
   if(streak<7) return streak + '-day streak \u2014 solid. Don\u2019t break it now.';
   return streak + '-day streak. That\u2019s genuinely impressive consistency.';
 }
+function shrutiBestDayAnswer(){
+  const byDay = {};
+  state.sessions.forEach(function(s){ const d=fmtDate(s.start); byDay[d]=(byDay[d]||0)+s.durationMin; });
+  const entries = Object.entries(byDay);
+  if(!entries.length) return 'No sessions logged yet \u2014 your first one will be the record to beat.';
+  entries.sort(function(a,b){ return b[1]-a[1]; });
+  return 'Your best day was ' + entries[0][0] + ' with ' + minutesToH(entries[0][1]) + ' logged.';
+}
+function shrutiNeglectAnswer(){
+  const totals = {};
+  state.subjects.forEach(function(s){ totals[s.id]=0; });
+  state.sessions.filter(function(s){ return fmtDate(s.start)>=daysAgoStr(6); }).forEach(function(s){ if(totals[s.subjectId]!=null) totals[s.subjectId]+=s.durationMin; });
+  const zero = state.subjects.filter(function(s){ return totals[s.id]===0; });
+  if(zero.length) return zero.map(function(s){return s.name;}).join(', ') + ' — no time logged in the last 7 days.';
+  let least=state.subjects[0];
+  state.subjects.forEach(function(s){ if(totals[s.id]<totals[least.id]) least=s; });
+  return least ? (least.name + ' has the least time this week (' + minutesToH(totals[least.id]) + ') \u2014 worth a look.') : 'Add a subject first.';
+}
+function shrutiConsistencyAnswer(){
+  const dates = new Set(state.sessions.map(function(s){ return fmtDate(s.start); }));
+  if(dates.size===0) return 'No sessions yet \u2014 nothing to measure consistency against.';
+  const sorted = Array.from(dates).sort();
+  const first = new Date(sorted[0]);
+  const daysSince = Math.max(1, Math.round((new Date(todayStr())-first)/86400000)+1);
+  const pct = Math.round((dates.size/daysSince)*100);
+  return 'You\u2019ve studied on ' + dates.size + ' of the last ' + daysSince + ' days (' + pct + '%) since your first logged session.';
+}
+function shrutiBuildRoutine(availableMin){
+  const todayS = todayStr(), tomorrowS = daysFromNowStr(1);
+  let remaining = availableMin;
+  const lines = [];
+  const urgent = state.events.filter(function(e){ return e.date===todayS || e.date===tomorrowS; })
+    .sort(function(a,b){ return (a.type==='exam'?0:1) - (b.type==='exam'?0:1); });
+  urgent.forEach(function(e){
+    if(remaining<=15) return;
+    const subj = subjectById(e.subjectId);
+    const block = Math.min(45, remaining, e.estMin||45);
+    lines.push(block + ' min \u2014 ' + (subj?subj.name:'') + ': ' + e.title + ' (' + e.type + ')');
+    remaining -= block;
+    if(remaining>10){ lines.push('10 min \u2014 Break'); remaining -= 10; }
+  });
+  const totals = {};
+  state.subjects.forEach(function(s){ totals[s.id]=0; });
+  state.sessions.filter(function(s){ return fmtDate(s.start)>=daysAgoStr(6); }).forEach(function(s){ if(totals[s.subjectId]!=null) totals[s.subjectId]+=s.durationMin; });
+  const ranked = state.subjects.slice().sort(function(a,b){ return totals[a.id]-totals[b.id]; });
+  let i = 0;
+  let guard = 0;
+  while(remaining>15 && ranked.length && guard<20){
+    guard++;
+    const subj = ranked[i % ranked.length];
+    const block = Math.min(40, remaining);
+    lines.push(block + ' min \u2014 ' + subj.name);
+    remaining -= block;
+    if(remaining>10){ lines.push('10 min \u2014 Break'); remaining -= 10; }
+    i++;
+  }
+  if(!lines.length) return 'Not enough time to build a routine \u2014 try a larger window.';
+  return lines.join('\n');
+}
 
 /* ================= TRENDS TAB ================= */
 function renderTrends(){
   const panel = document.getElementById('panel-trends');
-  const streak = calcStreak();
-  const todayMin = state.sessions.filter(function(s){ return fmtDate(s.start)===todayStr(); }).reduce(function(a,s){ return a+s.durationMin; },0);
   const goalMin = state.settings.dailyGoalMin;
+  const todayMin = state.sessions.filter(function(s){ return fmtDate(s.start)===todayStr(); }).reduce(function(a,s){ return a+s.durationMin; },0);
   const pct = Math.min(100, Math.round((todayMin/goalMin)*100)) || 0;
   const circumference = 2*Math.PI*26;
+  const allTimeMin = state.sessions.reduce(function(a,s){ return a+s.durationMin; },0);
 
   panel.innerHTML =
     '<div class="period-row" id="periodRow">' +
       '<button class="period-btn ' + (activePeriod==='day'?'active':'') + '" data-p="day">Day</button>' +
       '<button class="period-btn ' + (activePeriod==='week'?'active':'') + '" data-p="week">Week</button>' +
       '<button class="period-btn ' + (activePeriod==='month'?'active':'') + '" data-p="month">Month</button>' +
+      '<button class="period-btn ' + (activePeriod==='year'?'active':'') + '" data-p="year">Year</button>' +
     '</div>' +
     '<div class="stat-hero"><span class="section-label" style="margin:0;" id="trendTitle">This week</span><span class="delta" id="trendDelta"></span></div>' +
     '<div class="val" id="trendTotal">0.0h</div>' +
     '<div class="legend-row" id="trendLegend"></div>' +
     '<div class="chart-box"><canvas id="trendsCanvas" role="img" aria-label="Study hours chart"></canvas></div>' +
-    '<div class="card" style="margin-top:6px;"><p class="section-label">Streak &middot; last 14 days</p><div class="punchcard" id="punchcard"></div></div>' +
+    '<p class="chart-hint">Tap a bar to see the subject breakdown</p>' +
+    '<div id="barBreakdown"></div>' +
+
+    '<div class="card">' +
+      '<p class="section-label with-arrow" id="allTimeToggle">All time &middot; ' + minutesToH(allTimeMin) + '<span class="arrow" id="allTimeArrow">\u25be</span></p>' +
+      '<div id="allTimeBreakdown" style="display:none;"></div>' +
+    '</div>' +
+
+    '<div class="card" style="margin-top:6px;">' +
+      '<div class="punch-head"><p class="section-label" style="margin:0;">Streak</p>' +
+      '<div style="display:flex; align-items:center; gap:6px;"><button class="punch-nav" id="punchPrev">&lsaquo;</button><span class="punch-range" id="punchRange"></span><button class="punch-nav" id="punchNext">&rsaquo;</button></div></div>' +
+      '<div class="punchcard" id="punchcard"></div>' +
+      '<div class="streak-stats"><span>Current streak: <b id="streakNum"></b></span><span id="streakRatio"></span></div>' +
+    '</div>' +
+
     '<div class="card"><p class="section-label">Daily goal</p><div class="goal-row">' +
       '<div class="ring-wrap"><svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#2E313D" stroke-width="6"/><circle cx="32" cy="32" r="26" fill="none" stroke="#7FA875" stroke-width="6" stroke-linecap="round" stroke-dasharray="' + circumference + '" stroke-dashoffset="' + (circumference*(1-pct/100)) + '"/></svg><div class="ring-pct">' + pct + '%</div></div>' +
       '<div><div class="mono" style="font-size:14px;">' + todayMin + ' / ' + goalMin + ' min today</div>' +
       '<div class="goal-edit"><input type="number" id="goalInput" value="' + goalMin + '" min="10" step="10"><button class="btn btn-ghost" id="saveGoalBtn" style="padding:6px 12px; font-size:12px;">Save</button></div></div>' +
-    '</div></div>';
+    '</div></div>' +
+
+    '<p class="section-label">Compare same weekday</p>' +
+    '<div class="card">' +
+      '<div class="card-row" style="margin-bottom:8px;"><span style="font-size:12.5px; color:var(--text-2);" id="compareWeekdayLabel"></span>' +
+      '<select class="compare-sort" id="compareSortSelect">' +
+        '<option value="new-old">Newest first</option>' +
+        '<option value="old-new">Oldest first</option>' +
+        '<option value="high-low">Highest first</option>' +
+        '<option value="low-high">Lowest first</option>' +
+      '</select></div>' +
+      '<div id="compareList"></div>' +
+    '</div>';
 
   document.querySelectorAll('#periodRow .period-btn').forEach(function(btn){
     btn.addEventListener('click', function(){ activePeriod = btn.dataset.p; renderTrends(); });
@@ -726,9 +1026,22 @@ function renderTrends(){
     const v = parseInt(document.getElementById('goalInput').value,10);
     if(v && v>0){ state.settings.dailyGoalMin = v; storageSet(STORAGE_KEYS.settings, state.settings); renderTrends(); }
   });
+  document.getElementById('allTimeToggle').addEventListener('click', function(){
+    allTimeExpanded = !allTimeExpanded;
+    renderAllTimeBreakdown();
+  });
+  document.getElementById('punchPrev').addEventListener('click', function(){ punchOffset += 14; renderPunchcard(); });
+  document.getElementById('punchNext').addEventListener('click', function(){ punchOffset = Math.max(0, punchOffset-14); renderPunchcard(); });
+  document.getElementById('compareSortSelect').value = compareSortMode;
+  document.getElementById('compareSortSelect').addEventListener('change', function(){
+    compareSortMode = this.value;
+    renderCompareList();
+  });
 
   renderLegend();
   renderPunchcard();
+  renderAllTimeBreakdown();
+  renderCompareList();
   renderTrendsChart();
 }
 function renderLegend(){
@@ -736,18 +1049,62 @@ function renderLegend(){
     return '<span><span class="dot" style="background:' + s.color + '"></span>' + s.name + '</span>';
   }).join('');
 }
+function renderAllTimeBreakdown(){
+  const el = document.getElementById('allTimeBreakdown');
+  const arrow = document.getElementById('allTimeArrow');
+  arrow.classList.toggle('open', allTimeExpanded);
+  if(!allTimeExpanded){ el.style.display='none'; return; }
+  el.style.display='block';
+  const totals = {};
+  state.subjects.forEach(function(s){ totals[s.id]=0; });
+  state.sessions.forEach(function(s){ if(totals[s.subjectId]!=null) totals[s.subjectId]+=s.durationMin; });
+  const rows = state.subjects.slice().sort(function(a,b){ return totals[b.id]-totals[a.id]; });
+  el.innerHTML = '<ul class="breakdown-list" style="margin-top:10px;">' + rows.map(function(s){
+    return '<li><span class="bd-left"><span class="dot" style="background:'+s.color+'"></span>'+s.name+'</span><span class="mono">'+minutesToH(totals[s.id])+'</span></li>';
+  }).join('') + '</ul>';
+}
 function renderPunchcard(){
   const el = document.getElementById('punchcard');
+  const rangeEl = document.getElementById('punchRange');
   const dateSet = new Set(state.sessions.map(function(s){ return fmtDate(s.start); }));
   let html='';
-  for(let i=13;i>=0;i--){
+  for(let i=13+punchOffset;i>=punchOffset;i--){
     const day = daysAgoStr(i);
     html += '<div class="punch ' + (dateSet.has(day)?'filled':'') + ' ' + (i===0?'today':'') + '"></div>';
   }
   el.innerHTML = html;
+  const endDay = daysAgoStr(punchOffset), startDay = daysAgoStr(punchOffset+13);
+  rangeEl.textContent = startDay.slice(5) + ' \u2013 ' + endDay.slice(5);
+  document.getElementById('punchNext').disabled = punchOffset===0;
+
+  const streak = calcStreak();
+  document.getElementById('streakNum').textContent = streak + (streak===1?' day':' days');
+  const sortedDates = Array.from(dateSet).sort();
+  let ratioText = '';
+  if(sortedDates.length){
+    const first = new Date(sortedDates[0]);
+    const daysSince = Math.max(1, Math.round((new Date(todayStr())-first)/86400000)+1);
+    ratioText = 'Studied ' + dateSet.size + ' of ' + daysSince + ' days';
+  }
+  document.getElementById('streakRatio').textContent = ratioText;
 }
-function sumForRange(startDate, endDate){
-  return state.sessions.filter(function(s){ const d=fmtDate(s.start); return d>=startDate && d<=endDate; }).reduce(function(a,s){ return a+s.durationMin; },0);
+function renderCompareList(){
+  const today = new Date();
+  const weekdayIdx = today.getDay();
+  document.getElementById('compareWeekdayLabel').textContent = 'Every ' + DAY_NAMES[weekdayIdx] + ' logged';
+  const byDay = {};
+  state.sessions.forEach(function(s){ const d=fmtDate(s.start); byDay[d]=(byDay[d]||0)+s.durationMin; });
+  let entries = Object.entries(byDay).filter(function(e){ return new Date(e[0]).getDay()===weekdayIdx; });
+  if(!entries.length){ document.getElementById('compareList').innerHTML = '<div class="empty-state" style="padding:16px 0;">No ' + DAY_NAMES[weekdayIdx] + ' data yet.</div>'; return; }
+  const maxVal = Math.max.apply(null, entries.map(function(e){return e[1];}));
+  if(compareSortMode==='new-old') entries.sort(function(a,b){ return a[0]<b[0]?1:-1; });
+  else if(compareSortMode==='old-new') entries.sort(function(a,b){ return a[0]<b[0]?-1:1; });
+  else if(compareSortMode==='high-low') entries.sort(function(a,b){ return b[1]-a[1]; });
+  else entries.sort(function(a,b){ return a[1]-b[1]; });
+  document.getElementById('compareList').innerHTML = entries.map(function(e){
+    const isBest = e[1]===maxVal;
+    return '<div class="compare-row ' + (isBest?'best':'') + '"><span class="cr-date">' + e[0] + '</span><span>' + minutesToH(e[1]) + (isBest?'<span class="best-tag">Best</span>':'') + '</span></div>';
+  }).join('');
 }
 function sumForSubjectRange(subjectId, startDate, endDate){
   return state.sessions.filter(function(s){ return s.subjectId===subjectId && fmtDate(s.start)>=startDate && fmtDate(s.start)<=endDate; }).reduce(function(a,s){ return a+s.durationMin; },0);
@@ -755,7 +1112,9 @@ function sumForSubjectRange(subjectId, startDate, endDate){
 function renderTrendsChart(){
   const ctx = document.getElementById('trendsCanvas');
   if(trendsChart){ trendsChart.destroy(); trendsChart=null; }
+  document.getElementById('barBreakdown').innerHTML = '';
   let labels=[], datasets=[], totalMin=0, prevMin=0, title='';
+  currentBuckets = [];
 
   function buildDatasetsForDays(dayStrs){
     return state.subjects.map(function(subj){
@@ -770,6 +1129,7 @@ function renderTrendsChart(){
     datasets = [{ label:'Today', data, backgroundColor: state.subjects.map(function(s){return s.color;}), borderRadius:4 }];
     totalMin = sumForRange(todayStr(), todayStr());
     prevMin = sumForRange(daysAgoStr(1), daysAgoStr(1));
+    currentBuckets = state.subjects.map(function(){ return { start: todayStr(), end: todayStr() }; });
   } else if(activePeriod==='week'){
     title = 'This week';
     const dayStrs = [6,5,4,3,2,1,0].map(function(n){ return daysAgoStr(n); });
@@ -777,7 +1137,8 @@ function renderTrendsChart(){
     datasets = buildDatasetsForDays(dayStrs);
     totalMin = sumForRange(daysAgoStr(6), todayStr());
     prevMin = sumForRange(daysAgoStr(13), daysAgoStr(7));
-  } else {
+    currentBuckets = dayStrs.map(function(d){ return { start:d, end:d }; });
+  } else if(activePeriod==='month'){
     title = 'This month';
     labels = ['Week 1','Week 2','Week 3','Week 4'];
     const weekRanges = [[27,21],[20,14],[13,7],[6,0]];
@@ -786,6 +1147,23 @@ function renderTrendsChart(){
     });
     totalMin = sumForRange(daysAgoStr(27), todayStr());
     prevMin = sumForRange(daysAgoStr(55), daysAgoStr(28));
+    currentBuckets = weekRanges.map(function(r){ return { start: daysAgoStr(r[0]), end: daysAgoStr(r[1]) }; });
+  } else {
+    title = 'This year';
+    const now = new Date();
+    const year = now.getFullYear();
+    labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const monthRanges = [];
+    for(let mo=0; mo<12; mo++){
+      const first = new Date(year, mo, 1); const last = new Date(year, mo+1, 0);
+      monthRanges.push({ start: fmtDate(first), end: fmtDate(last) });
+    }
+    datasets = state.subjects.map(function(subj){
+      return { label: subj.name, data: monthRanges.map(function(r){ return sumForSubjectRange(subj.id, r.start, r.end)/60; }), backgroundColor: subj.color, borderRadius:3 };
+    });
+    totalMin = sumForRange(fmtDate(new Date(year,0,1)), fmtDate(new Date(year,11,31)));
+    prevMin = sumForRange(fmtDate(new Date(year-1,0,1)), fmtDate(new Date(year-1,11,31)));
+    currentBuckets = monthRanges;
   }
 
   document.getElementById('trendTitle').textContent = title;
@@ -806,24 +1184,65 @@ function renderTrendsChart(){
         x:{ stacked: activePeriod!=='day', grid:{display:false}, ticks:{color:'#63656F', font:{size:10.5}} },
         y:{ stacked: activePeriod!=='day', grid:{display:false}, ticks:{color:'#63656F', font:{size:10.5}} }
       },
-      plugins:{ legend:{display:false} }
+      plugins:{ legend:{display:false} },
+      onClick:function(evt, elements){
+        if(!elements.length) return;
+        const idx = elements[0].index;
+        showBarBreakdown(idx);
+      }
     }
   });
 }
+function showBarBreakdown(idx){
+  const bucket = activePeriod==='day' ? currentBuckets[0] : currentBuckets[idx];
+  if(!bucket) return;
+  const label = activePeriod==='day' ? state.subjects[idx].name : trendsChart.data.labels[idx];
+  const totals = state.subjects.map(function(s){
+    return { subj:s, min: sumForSubjectRange(s.id, bucket.start, bucket.end) };
+  }).filter(function(t){ return t.min>0; }).sort(function(a,b){ return b.min-a.min; });
+  const el = document.getElementById('barBreakdown');
+  if(!totals.length){ el.innerHTML = '<div class="empty-state" style="padding:12px 0;">No sessions in this period.</div>'; return; }
+  el.innerHTML = '<div class="breakdown-head">' + label + '</div><ul class="breakdown-list">' + totals.map(function(t){
+    return '<li><span class="bd-left"><span class="dot" style="background:'+t.subj.color+'"></span>'+t.subj.name+'</span><span class="mono">'+minutesToH(t.min)+'</span></li>';
+  }).join('') + '</ul>';
+}
 
 /* ================= PLAN TAB ================= */
+function studyWindowMinutesToday(){
+  const s = state.settings.studyWindowStart.split(':'); const e = state.settings.studyWindowEnd.split(':');
+  const startMin = parseInt(s[0],10)*60+parseInt(s[1],10);
+  const endMin = parseInt(e[0],10)*60+parseInt(e[1],10);
+  return Math.max(0, endMin-startMin);
+}
+function busyMinutesForDate(dateObj){
+  const day = dateObj.getDay();
+  let total = 0;
+  state.busyBlocks.filter(function(b){ return b.day===day; }).forEach(function(b){
+    const s = b.start.split(':'); const e = b.end.split(':');
+    const sm = parseInt(s[0],10)*60+parseInt(s[1],10);
+    const em = parseInt(e[0],10)*60+parseInt(e[1],10);
+    total += Math.max(0, em-sm);
+  });
+  return total;
+}
 function renderPlan(){
   const panel = document.getElementById('panel-plan');
   const upcoming = state.events.filter(function(e){ return e.date>=todayStr(); }).sort(function(a,b){ return a.date<b.date?-1:1; });
+  const suggested = suggestedStudyMinutesToday();
 
   panel.innerHTML =
+    '<div class="suggest-card" style="margin-bottom:20px;"><div class="insight-label" style="color:var(--success);">Suggested today</div>' +
+    '<div class="insight-text">Based on your tuition schedule and study window, aim for about <b>' + (suggested/60).toFixed(1) + 'h</b> today.</div></div>' +
+
     '<p class="section-label">Upcoming</p>' +
     (upcoming.length ? upcoming.map(function(e){
       const subj = subjectById(e.subjectId);
       const daysUntil = Math.round((new Date(e.date) - new Date(todayStr()))/86400000);
       const when = daysUntil===0 ? 'Today' : daysUntil===1 ? 'Tomorrow' : daysUntil + ' days';
+      const timeStr = e.time ? (' \u00b7 ' + fmtTimeLabel(e.time)) : '';
+      const estStr = e.estMin ? (' \u00b7 ~' + e.estMin + ' min') : '';
       return '<div class="plan-entry" style="--entry-color:' + (subj?subj.color:'#888') + '">' +
-        '<div class="plan-entry-info"><div class="title">' + e.title + '</div><div class="meta">' + (subj?subj.name:'') + ' &middot; ' + when + '</div></div>' +
+        '<div class="plan-entry-info"><div class="title">' + e.title + '</div><div class="meta">' + (subj?subj.name:'') + ' &middot; ' + when + timeStr + estStr + '</div></div>' +
         '<div style="display:flex; align-items:center; gap:8px;"><span class="plan-badge ' + e.type + '">' + e.type + '</span><button class="del-btn" data-id="' + e.id + '">&times;</button></div>' +
       '</div>';
     }).join('') : '<div class="empty-state">Nothing coming up. Add an exam or homework entry below.</div>') +
@@ -835,28 +1254,39 @@ function renderPlan(){
         '<button class="type-btn" data-t="homework">Homework</button>' +
         '<button class="type-btn" data-t="other">Other</button>' +
       '</div>' +
-      '<select id="planSubjSelect" style="background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text); border-radius:6px; padding:9px 10px; font-family:Inter; font-size:13px;">' +
+      '<select id="planSubjSelect">' +
         state.subjects.map(function(s){ return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('') +
       '</select>' +
       '<input type="text" id="planTitleInput" placeholder="Title (e.g. Chapter 6, Midterm)">' +
-      '<input type="date" id="planDateInput">' +
+      '<div class="field-row">' +
+        '<div><div class="field-label">Date</div><input type="date" id="planDateInput"></div>' +
+        '<div><div class="field-label">Time (optional)</div><input type="time" id="planTimeInput"></div>' +
+      '</div>' +
+      '<div><div class="field-label">Estimated time needed, minutes (optional)</div><input type="number" id="planEstInput" min="5" step="5" placeholder="e.g. 30"></div>' +
       '<button class="btn btn-primary" id="createPlanBtn" style="font-size:13px;">Add</button>' +
     '</div>' +
 
-    '<p class="section-label" style="margin-top:24px;">Notifications</p>' +
+    '<p class="section-label" style="margin-top:24px;">Study window</p>' +
+    '<div class="card"><p class="hint" style="text-align:left; margin:0 0 10px;">The hours you\u2019re realistically available to study each day \u2014 used for the suggestion above.</p>' +
+    '<div class="field-row"><div><div class="field-label">Start</div><input type="time" id="windowStartInput" value="' + state.settings.studyWindowStart + '" style="width:100%; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text); border-radius:6px; padding:9px 10px;"></div>' +
+    '<div><div class="field-label">End</div><input type="time" id="windowEndInput" value="' + state.settings.studyWindowEnd + '" style="width:100%; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text); border-radius:6px; padding:9px 10px;"></div></div>' +
+    '<button class="btn btn-ghost" id="saveWindowBtn" style="font-size:12px; padding:7px 12px; margin-top:10px;">Save</button></div>' +
+
+    '<p class="section-label" style="margin-top:24px;">Notifications &amp; sound</p>' +
     '<div class="card"><div class="notif-row"><span>Remind me about exams / homework due soon</span>' +
       '<button class="btn btn-ghost" id="notifBtn" style="font-size:12px; padding:7px 12px;">' + (state.settings.notifyEnabled ? 'Enabled' : 'Enable') + '</button></div>' +
-      '<p class="hint" style="text-align:left; margin-top:8px;">Notifications only fire while Study Log is open in your browser \u2014 a real background push would need a server, which this simple app doesn\u2019t have.</p>' +
+      '<p class="hint" style="text-align:left; margin:8px 0 0;">Notifications only fire while Study Log is open in your browser.</p>' +
+      '<div class="notif-row" style="margin-top:14px;"><span>Sound on timer events</span>' +
+      '<button class="btn btn-ghost" id="soundBtn" style="font-size:12px; padding:7px 12px;">' + (state.settings.soundEnabled ? 'On' : 'Off') + '</button></div>' +
     '</div>';
 
-  document.querySelectorAll('.del-btn').forEach(function(btn){
+  document.querySelectorAll('.del-btn[data-id]').forEach(function(btn){
     btn.addEventListener('click', function(){
       state.events = state.events.filter(function(e){ return e.id !== btn.dataset.id; });
       storageSet(STORAGE_KEYS.events, state.events);
       renderPlan();
     });
   });
-
   document.querySelectorAll('#typeRow .type-btn').forEach(function(btn){
     btn.classList.toggle('active', btn.dataset.t===activePlanType);
     btn.addEventListener('click', function(){
@@ -864,22 +1294,34 @@ function renderPlan(){
       document.querySelectorAll('#typeRow .type-btn').forEach(function(b){ b.classList.toggle('active', b===btn); });
     });
   });
-
   document.getElementById('toggleAddPlan').addEventListener('click', function(){
     document.getElementById('addPlanForm').classList.toggle('open');
   });
   document.getElementById('createPlanBtn').addEventListener('click', function(){
     const title = document.getElementById('planTitleInput').value.trim();
     const date = document.getElementById('planDateInput').value;
+    const time = document.getElementById('planTimeInput').value;
+    const estMin = parseInt(document.getElementById('planEstInput').value,10) || null;
     const subjectId = document.getElementById('planSubjSelect').value;
     if(!title || !date) return;
-    state.events.push({ id:'ev'+Date.now(), subjectId, type: activePlanType, title, date });
+    state.events.push({ id:'ev'+Date.now(), subjectId, type: activePlanType, title, date, time: time||null, estMin: estMin });
     storageSet(STORAGE_KEYS.events, state.events);
     document.getElementById('planTitleInput').value='';
     document.getElementById('planDateInput').value='';
+    document.getElementById('planTimeInput').value='';
+    document.getElementById('planEstInput').value='';
     document.getElementById('addPlanForm').classList.remove('open');
     renderPlan();
     maybeNotifyUpcoming();
+  });
+
+  document.getElementById('saveWindowBtn').addEventListener('click', function(){
+    const s = document.getElementById('windowStartInput').value;
+    const e = document.getElementById('windowEndInput').value;
+    if(s) state.settings.studyWindowStart = s;
+    if(e) state.settings.studyWindowEnd = e;
+    storageSet(STORAGE_KEYS.settings, state.settings);
+    renderPlan();
   });
 
   document.getElementById('notifBtn').addEventListener('click', async function(){
@@ -889,6 +1331,27 @@ function renderPlan(){
     storageSet(STORAGE_KEYS.settings, state.settings);
     renderPlan();
     maybeNotifyUpcoming();
+  });
+  document.getElementById('soundBtn').addEventListener('click', function(){
+    state.settings.soundEnabled = !state.settings.soundEnabled;
+    storageSet(STORAGE_KEYS.settings, state.settings);
+    if(state.settings.soundEnabled) beep(660,120);
+    renderPlan();
+  });
+}
+function renderBusyList(){
+  const el = document.getElementById('busyList');
+  if(!state.busyBlocks.length){ el.innerHTML = '<div class="empty-state" style="padding:16px 0;">No busy times added yet.</div>'; return; }
+  const sorted = state.busyBlocks.slice().sort(function(a,b){ return a.day-b.day || (a.start<b.start?-1:1); });
+  el.innerHTML = sorted.map(function(b){
+    return '<div class="busy-entry"><div class="be-info"><div class="title">' + b.label + '</div><div class="meta">' + DAY_NAMES[b.day] + ' \u00b7 ' + fmtTimeLabel(b.start) + '\u2013' + fmtTimeLabel(b.end) + '</div></div><button class="del-btn" data-bb="' + b.id + '">&times;</button></div>';
+  }).join('');
+  el.querySelectorAll('.del-btn[data-bb]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      state.busyBlocks = state.busyBlocks.filter(function(b){ return b.id!==btn.dataset.bb; });
+      storageSet(STORAGE_KEYS.busyBlocks, state.busyBlocks);
+      renderPlan();
+    });
   });
 }
 
@@ -934,10 +1397,13 @@ function maybeShowStreakPopup(){
 }
 
 /* ================= LOG TAB ================= */
+let logDateFilter = null;
 function renderLog(){
   const panel = document.getElementById('panel-log');
+  let sessions = state.sessions;
+  if(logDateFilter){ sessions = sessions.filter(function(s){ return fmtDate(s.start)===logDateFilter; }); }
   const grouped = {};
-  state.sessions.slice().sort(function(a,b){ return b.start-a.start; }).forEach(function(s){
+  sessions.slice().sort(function(a,b){ return b.start-a.start; }).forEach(function(s){
     const d = fmtDate(s.start);
     (grouped[d]=grouped[d]||[]).push(s);
   });
@@ -945,7 +1411,7 @@ function renderLog(){
 
   let logHtml = '';
   if(dates.length===0){
-    logHtml = '<div class="empty-state">No sessions yet. Start a timer from the Track tab.</div>';
+    logHtml = '<div class="empty-state">' + (logDateFilter ? 'No sessions on that date.' : 'No sessions yet. Start a timer from the Track tab.') + '</div>';
   } else {
     logHtml = dates.map(function(date){
       const label = date===todayStr() ? 'Today' : new Date(date).toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'});
@@ -961,6 +1427,7 @@ function renderLog(){
   }
 
   panel.innerHTML =
+    '<div class="log-filter-row"><input type="date" id="logDateFilterInput" value="' + (logDateFilter||'') + '"><button class="btn btn-ghost" id="logResetBtn" style="font-size:12px; padding:9px 14px;">Reset</button></div>' +
     '<p class="section-label">Session history</p>' + logHtml +
     '<div class="subj-manager"><p class="section-label">Subjects</p><ul class="subj-list" id="subjList"></ul>' +
     '<button class="btn btn-ghost" id="toggleAddSubj" style="font-size:12px; padding:8px 14px;">+ Add subject</button>' +
@@ -968,7 +1435,29 @@ function renderLog(){
       '<input type="text" id="newSubjName" placeholder="Subject name">' +
       '<div class="swatches" id="swatchRow"></div>' +
       '<button class="btn btn-primary" id="createSubjBtn" style="font-size:13px;">Add</button>' +
+    '</div></div>' +
+
+    '<div class="subj-manager"><p class="section-label">Weekly busy schedule (tuition etc.)</p>' +
+    '<div id="busyList"></div>' +
+    '<button class="btn btn-ghost" id="toggleAddBusy" style="font-size:12px; padding:8px 14px;">+ Add busy time</button>' +
+    '<div class="add-plan-form" id="addBusyForm">' +
+      '<div class="day-toggle-row" id="busyDayRow"></div>' +
+      '<input type="text" id="busyLabelInput" placeholder="Label (e.g. Math tuition)">' +
+      '<div class="field-row">' +
+        '<div><div class="field-label">Start</div><input type="time" id="busyStartInput" value="17:00"></div>' +
+        '<div><div class="field-label">End</div><input type="time" id="busyEndInput" value="19:00"></div>' +
+      '</div>' +
+      '<button class="btn btn-primary" id="createBusyBtn" style="font-size:13px;">Add</button>' +
     '</div></div>';
+
+  document.getElementById('logDateFilterInput').addEventListener('change', function(){
+    logDateFilter = this.value || null;
+    renderLog();
+  });
+  document.getElementById('logResetBtn').addEventListener('click', function(){
+    logDateFilter = null;
+    renderLog();
+  });
 
   panel.querySelectorAll('.del-btn[data-id]').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -1018,6 +1507,30 @@ function renderLog(){
     document.getElementById('addSubjForm').classList.remove('open');
     renderAll();
   });
+
+  renderBusyList();
+  const busyDayRow = document.getElementById('busyDayRow');
+  busyDayRow.innerHTML = DAY_NAMES.map(function(d,i){ return '<button class="day-toggle ' + (i===activeBusyDay?'active':'') + '" data-d="' + i + '">' + d + '</button>'; }).join('');
+  busyDayRow.querySelectorAll('.day-toggle').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      activeBusyDay = parseInt(btn.dataset.d,10);
+      busyDayRow.querySelectorAll('.day-toggle').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    });
+  });
+  document.getElementById('toggleAddBusy').addEventListener('click', function(){
+    document.getElementById('addBusyForm').classList.toggle('open');
+  });
+  document.getElementById('createBusyBtn').addEventListener('click', function(){
+    const label = document.getElementById('busyLabelInput').value.trim() || 'Busy';
+    const start = document.getElementById('busyStartInput').value;
+    const end = document.getElementById('busyEndInput').value;
+    if(!start || !end) return;
+    state.busyBlocks.push({ id:'bb'+Date.now(), day: activeBusyDay, start, end, label });
+    storageSet(STORAGE_KEYS.busyBlocks, state.busyBlocks);
+    document.getElementById('busyLabelInput').value='';
+    document.getElementById('addBusyForm').classList.remove('open');
+    renderLog();
+  });
 }
 
 /* ---------- boot ---------- */
@@ -1027,6 +1540,22 @@ document.addEventListener('click', function(e){
   if(e.target.id==='startBtn') startTimer();
   if(e.target.id==='pauseBtn') (timer.phase==='running' ? pauseTimer() : resumeTimer());
   if(e.target.id==='stopBtn') stopTimer();
+});
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible' && timer.phase==='running'){
+    const active = storageGet(STORAGE_KEYS.activeTimer, null);
+    if(active && active.phase==='running'){
+      const elapsed = active.elapsedSec + Math.max(0, Math.floor((Date.now()-active.savedAt)/1000));
+      if(timer.mode !== 'stopwatch' && elapsed >= timer.targetSec && timer.targetSec>0){
+        timer.elapsedSec = timer.targetSec;
+        handleTimerComplete();
+      } else {
+        timer.elapsedSec = elapsed;
+        timer.lastTick = Date.now();
+        updateTimerDisplay();
+      }
+    }
+  }
 });
 
 if('serviceWorker' in navigator){
