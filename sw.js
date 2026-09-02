@@ -1,4 +1,4 @@
-const CACHE = 'study-log-v3';
+const CACHE = 'study-log-v4';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './sound-start.mp3'];
 
 self.addEventListener('install', (e) => {
