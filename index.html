@@ -38,7 +38,11 @@
   .topbar{
     display:flex; align-items:center; justify-content:space-between;
     padding:20px 20px 16px; border-bottom:1px solid var(--border);
+    gap:10px;
   }
+  .topbar-left{display:flex; align-items:center; gap:10px;}
+  .menu-btn{background:var(--surface); border:1px solid var(--border-strong); border-radius:8px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-2); flex:0 0 auto;}
+  .menu-btn svg{width:18px; height:18px;}
   .brand{font-family:'Bitter',serif; font-weight:700; font-size:15px; letter-spacing:2px; color:var(--text);}
   .brand span{color:var(--accent);}
   .date-stamp{
@@ -63,6 +67,67 @@
   .session-panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
   .session-panel-head h2{font-family:'Bitter',serif; font-size:16px; font-weight:700; margin:0;}
   .panel-close-btn{background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text-2); border-radius:8px; width:30px; height:30px; font-size:16px; cursor:pointer; line-height:1;}
+
+  /* left slide-out drawer */
+  .drawer-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:130; display:none;}
+  .drawer-backdrop.open{display:block;}
+  .drawer{position:fixed; top:0; left:0; bottom:0; width:78%; max-width:300px; background:var(--surface); border-right:1px solid var(--border-strong); padding:24px 18px; transform:translateX(-100%); transition:transform 0.22s ease;}
+  .drawer-backdrop.open .drawer{transform:translateX(0);}
+  .drawer-title{font-family:'Bitter',serif; font-weight:700; font-size:16px; margin:0 0 20px;}
+  .drawer-item{display:flex; align-items:center; gap:12px; padding:12px 8px; border-radius:8px; color:var(--text); font-size:14px; cursor:pointer; background:none; border:none; width:100%; text-align:left;}
+  .drawer-item:hover{background:var(--surface-2);}
+  .drawer-item svg{width:18px; height:18px; color:var(--text-2); flex:0 0 auto;}
+
+  /* generic overlay panel (achievements / to-do) reusing the top-panel language */
+  .overlay-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:120; display:none;}
+  .overlay-backdrop.open{display:block;}
+  .overlay-panel{
+    position:absolute; top:0; left:50%; transform:translateX(-50%); width:100%; max-width:440px;
+    background:var(--bg); border-bottom:1px solid var(--border-strong); border-radius:0 0 16px 16px;
+    max-height:88vh; overflow-y:auto; padding:18px 20px 24px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4);
+  }
+
+  /* to-do list */
+  .todo-add-row{display:flex; gap:8px; margin-bottom:16px;}
+  .todo-add-row input{flex:1; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text); border-radius:8px; padding:9px 10px; font-family:'Inter'; font-size:13px;}
+  .todo-item{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border);}
+  .todo-item:last-child{border-bottom:none;}
+  .todo-check{width:20px; height:20px; border-radius:5px; border:1.5px solid var(--border-strong); background:var(--surface-2); flex:0 0 auto; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--accent); font-size:13px;}
+  .todo-check.checked{background:var(--accent); border-color:var(--accent); color:#1A1409;}
+  .todo-text{flex:1; font-size:13.5px;}
+  .todo-text.done{text-decoration:line-through; color:var(--text-3);}
+
+  /* achievements */
+  .ach-hero{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:18px; display:flex; align-items:center; gap:14px;}
+  .ach-hero-icon{width:44px; height:44px; border-radius:10px; background:var(--accent-dim); display:flex; align-items:center; justify-content:center; color:var(--accent); flex:0 0 auto;}
+  .ach-hero-icon svg{width:22px; height:22px;}
+  .ach-hero .lbl{font-size:11.5px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.5px;}
+  .ach-hero .val{font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:600; margin-top:2px;}
+  .ach-progress-track{background:var(--surface-3); border-radius:6px; height:8px; overflow:hidden; margin:8px 0 4px;}
+  .ach-progress-fill{background:var(--accent); height:100%; border-radius:6px;}
+  .ach-progress-label{font-size:11.5px; color:var(--text-3); text-align:center;}
+  .badge-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:12px;}
+  .badge{
+    aspect-ratio:1; border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:var(--surface-2); border:1px solid var(--border-strong); padding:8px; text-align:center;
+  }
+  .badge.unlocked{background:linear-gradient(160deg, var(--accent-dim), var(--surface-2)); border-color:var(--accent);}
+  .badge .badge-num{font-family:'IBM Plex Mono',monospace; font-size:17px; font-weight:700; color:var(--text-3);}
+  .badge.unlocked .badge-num{color:var(--accent);}
+  .badge .badge-lbl{font-size:8.5px; text-transform:uppercase; letter-spacing:0.3px; color:var(--text-3); margin-top:2px;}
+  .badge.unlocked .badge-lbl{color:var(--text-2);}
+  .badge .badge-date{font-size:7.5px; color:var(--text-3); margin-top:3px;}
+
+  .ach-popup-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:150; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .ach-popup-card{
+    background:linear-gradient(165deg, #2B2410, var(--surface)); border:1px solid var(--accent); border-radius:18px;
+    padding:32px 24px; text-align:center; max-width:320px; width:100%;
+  }
+  .ach-popup-unlocked{font-size:11px; letter-spacing:2px; color:var(--accent); text-transform:uppercase; margin-bottom:10px;}
+  .ach-popup-num{font-family:'Bitter',serif; font-weight:700; font-size:40px; color:var(--text); line-height:1;}
+  .ach-popup-sub{font-size:13px; color:var(--accent); text-transform:uppercase; letter-spacing:1px; margin-top:6px; font-weight:600;}
+  .ach-popup-msg{font-size:12.5px; color:var(--text-2); margin-top:14px; line-height:1.5;}
 
   .tab-panel{padding:20px;}
   .section-label{
@@ -320,7 +385,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const STORAGE_KEYS = { subjects:'subjects', sessions:'sessions', settings:'settings', events:'events', lastPopup:'lastPopup', activeTimer:'activeTimer', busyBlocks:'busyBlocks' };
+const STORAGE_KEYS = { subjects:'subjects', sessions:'sessions', settings:'settings', events:'events', lastPopup:'lastPopup', activeTimer:'activeTimer', busyBlocks:'busyBlocks', todos:'todos', achievements:'achievements' };
 const DEFAULT_SUBJECTS = [
   {id:'math', name:'Math', color:'#5B7FA6'},
   {id:'chem', name:'Chemistry', color:'#C97A56'},
@@ -330,8 +395,10 @@ const DEFAULT_SUBJECTS = [
 const SWATCH_COLORS = ['#5B7FA6','#C97A56','#4C9A8E','#8B6B9E','#C9A227','#B85C7A','#6B8E4E','#6E7A8A'];
 const DEFAULT_SETTINGS = { dailyGoalMin: 120, timerMode:'stopwatch', focusMin: 25, breakMin: 5, notifyEnabled:false, soundEnabled:true, studyWindowStart:'16:00', studyWindowEnd:'23:00' };
 const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const TOTAL_HOUR_MILESTONES = [1,3,5,10,15,25,50,75,100,150,200,250,400,500,750,1000];
+const DAILY_HOUR_MILESTONES = [6,7,8,9,10,12];
 
-let state = { subjects: [], sessions: [], settings: {...DEFAULT_SETTINGS}, events: [], busyBlocks: [] };
+let state = { subjects: [], sessions: [], settings: {...DEFAULT_SETTINGS}, events: [], busyBlocks: [], todos: [], achievements: {total:{}, daily:{}} };
 let activeSubjectId = null;
 let activeTab = 'track';
 let activePeriod = 'day';
@@ -464,6 +531,9 @@ function init(){
   state.settings = {...DEFAULT_SETTINGS, ...storageGet(STORAGE_KEYS.settings, {})};
   state.events = storageGet(STORAGE_KEYS.events, []);
   state.busyBlocks = storageGet(STORAGE_KEYS.busyBlocks, []);
+  state.todos = storageGet(STORAGE_KEYS.todos, []);
+  state.achievements = storageGet(STORAGE_KEYS.achievements, {total:{}, daily:{}});
+  backfillAchievements();
   timer.mode = state.settings.timerMode || 'stopwatch';
   activeSubjectId = state.subjects[0] ? state.subjects[0].id : null;
 
@@ -504,7 +574,10 @@ function buildShell(){
   const dateLabel = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
   app.innerHTML =
     '<div class="topbar">' +
-      '<div class="brand">STUDY <span>LOG</span></div>' +
+      '<div class="topbar-left">' +
+        '<button class="menu-btn" id="menuBtn" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>' +
+        '<div class="brand">STUDY <span>LOG</span></div>' +
+      '</div>' +
       '<div class="topbar-right">' +
         '<button class="bell-btn" id="bellBtn" aria-label="Session history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="bell-badge" id="bellBadge" style="display:none;"></span></button>' +
         '<div class="date-stamp">' + dateLabel + '</div>' +
@@ -533,7 +606,42 @@ function buildShell(){
   }
   document.getElementById('bellBtn').addEventListener('click', openSessionPanel);
   updateBellBadge();
+
+  if(!document.getElementById('drawerBackdrop')){
+    const drawerBackdrop = document.createElement('div');
+    drawerBackdrop.className = 'drawer-backdrop';
+    drawerBackdrop.id = 'drawerBackdrop';
+    drawerBackdrop.innerHTML =
+      '<div class="drawer" onclick="event.stopPropagation()">' +
+        '<h2 class="drawer-title">STUDY LOG</h2>' +
+        '<button class="drawer-item" id="drawerTodoBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>To-do list</button>' +
+        '<button class="drawer-item" id="drawerAchBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L7 21l5-2.5L17 21l-1.5-8.5"/></svg>Your Achievements</button>' +
+      '</div>';
+    document.body.appendChild(drawerBackdrop);
+    drawerBackdrop.addEventListener('click', closeDrawer);
+    document.getElementById('drawerTodoBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('todo'); });
+    document.getElementById('drawerAchBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('achievements'); });
+  }
+  if(!document.getElementById('overlayBackdrop')){
+    const overlayBackdrop = document.createElement('div');
+    overlayBackdrop.className = 'overlay-backdrop';
+    overlayBackdrop.id = 'overlayBackdrop';
+    overlayBackdrop.innerHTML = '<div class="overlay-panel" id="overlayPanel"></div>';
+    document.body.appendChild(overlayBackdrop);
+    overlayBackdrop.addEventListener('click', function(e){ if(e.target===overlayBackdrop) closeOverlay(); });
+  }
+  document.getElementById('menuBtn').addEventListener('click', openDrawer);
 }
+
+function openDrawer(){ document.getElementById('drawerBackdrop').classList.add('open'); }
+function closeDrawer(){ document.getElementById('drawerBackdrop').classList.remove('open'); }
+function openOverlay(kind){
+  document.getElementById('overlayBackdrop').classList.add('open');
+  if(kind==='todo') renderTodoOverlay();
+  if(kind==='achievements') renderAchievementsOverlay();
+}
+function closeOverlay(){ document.getElementById('overlayBackdrop').classList.remove('open'); }
+
 
 function openSessionPanel(){
   document.getElementById('sessionPanelBackdrop').classList.add('open');
@@ -764,7 +872,7 @@ function stopTimer(){
   timer.phase='idle'; timer.elapsedSec=0; timer.targetSec=0; timer.lastTick=null; timer.isBreak=false;
   clearActiveTimer();
   beep(440,220);
-  if(logged) checkLadderProgress();
+  if(logged){ checkLadderProgress(); checkAchievements(); }
   renderAll();
 }
 function handleTimerComplete(){
@@ -791,7 +899,7 @@ function handleTimerComplete(){
     beepPattern([[660,140],[880,220]]);
     notifyLocal('Study Log', 'Timer complete.');
   }
-  if(logged) checkLadderProgress();
+  if(logged){ checkLadderProgress(); checkAchievements(); }
   renderAll();
 }
 
@@ -820,6 +928,144 @@ function ordinal(n){
   const s=['th','st','nd','rd']; const v=n%100;
   return n + (s[(v-20)%10]||s[v]||s[0]);
 }
+
+function backfillAchievements(){
+  const allTimeHours = state.sessions.reduce(function(a,s){ return a+s.durationMin; },0)/60;
+  const todayHours = state.sessions.filter(function(s){ return fmtDate(s.start)===todayStr(); }).reduce(function(a,s){ return a+s.durationMin; },0)/60;
+  let changed = false;
+  TOTAL_HOUR_MILESTONES.forEach(function(m){
+    if(!state.achievements.total[m] && allTimeHours >= m){ state.achievements.total[m] = todayStr(); changed = true; }
+  });
+  DAILY_HOUR_MILESTONES.forEach(function(m){
+    if(!state.achievements.daily[m] && todayHours >= m){ state.achievements.daily[m] = todayStr(); changed = true; }
+  });
+  if(changed) storageSet(STORAGE_KEYS.achievements, state.achievements);
+}
+
+/* ---------- achievements ---------- */
+let achievementPopupQueue = [];
+function checkAchievements(){
+  const allTimeHours = state.sessions.reduce(function(a,s){ return a+s.durationMin; },0)/60;
+  const todayHours = state.sessions.filter(function(s){ return fmtDate(s.start)===todayStr(); }).reduce(function(a,s){ return a+s.durationMin; },0)/60;
+  let changed = false;
+  const nowIso = todayStr();
+
+  TOTAL_HOUR_MILESTONES.forEach(function(m){
+    if(!state.achievements.total[m] && allTimeHours >= m){
+      state.achievements.total[m] = nowIso;
+      changed = true;
+      achievementPopupQueue.push({ type:'total', value:m });
+    }
+  });
+  DAILY_HOUR_MILESTONES.forEach(function(m){
+    if(!state.achievements.daily[m] && todayHours >= m){
+      state.achievements.daily[m] = nowIso;
+      changed = true;
+      achievementPopupQueue.push({ type:'daily', value:m });
+    }
+  });
+
+  if(changed){
+    storageSet(STORAGE_KEYS.achievements, state.achievements);
+    processAchievementQueue();
+  }
+}
+function processAchievementQueue(){
+  if(document.querySelector('.ach-popup-backdrop')) return;
+  const next = achievementPopupQueue.shift();
+  if(!next) return;
+  showAchievementPopup(next.type, next.value);
+}
+function showAchievementPopup(type, value){
+  const backdrop = document.createElement('div');
+  backdrop.className = 'ach-popup-backdrop';
+  const title = type==='total' ? (value + 'H FOCUS') : (value + '+ HOURS STUDY DAY');
+  const msg = type==='total' ? 'You\u2019ve focused ' + value + ' hours in total. Keep building.' : 'You\u2019ve put in the work today. Consistency now, results later.';
+  backdrop.innerHTML =
+    '<div class="ach-popup-card">' +
+      '<div class="ach-popup-unlocked">Achievement Unlocked</div>' +
+      '<div class="ach-popup-num">' + value + (type==='total' ? 'H' : '') + '</div>' +
+      '<div class="ach-popup-sub">' + title + '</div>' +
+      '<div class="ach-popup-msg">' + msg + '</div>' +
+      '<button class="btn btn-primary" id="closeAchPopup" style="width:100%; margin-top:20px;">Nice</button>' +
+    '</div>';
+  document.body.appendChild(backdrop);
+  document.getElementById('closeAchPopup').addEventListener('click', function(){
+    backdrop.remove();
+    processAchievementQueue();
+  });
+}
+function renderAchievementsOverlay(){
+  const panel = document.getElementById('overlayPanel');
+  const allTimeHours = state.sessions.reduce(function(a,s){ return a+s.durationMin; },0)/60;
+  let nextMilestone = TOTAL_HOUR_MILESTONES.find(function(m){ return !state.achievements.total[m]; });
+  const prevMilestone = TOTAL_HOUR_MILESTONES.filter(function(m){ return state.achievements.total[m]; }).pop() || 0;
+  const progressPct = nextMilestone ? Math.min(100, Math.round(((allTimeHours-prevMilestone)/(nextMilestone-prevMilestone))*100)) : 100;
+  const unlockedCount = TOTAL_HOUR_MILESTONES.filter(function(m){ return state.achievements.total[m]; }).length;
+
+  panel.innerHTML =
+    '<div class="session-panel-head"><h2>Your Achievements</h2><button class="panel-close-btn" id="panelCloseBtn2">&times;</button></div>' +
+    '<div class="ach-hero">' +
+      '<div class="ach-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>' +
+      '<div><div class="lbl">Total time focused</div><div class="val">' + allTimeHours.toFixed(1) + 'h</div></div>' +
+    '</div>' +
+    (nextMilestone ? (
+      '<div class="ach-progress-track"><div class="ach-progress-fill" style="width:' + progressPct + '%;"></div></div>' +
+      '<div class="ach-progress-label">' + allTimeHours.toFixed(1) + 'h / ' + nextMilestone + 'h toward next badge</div>'
+    ) : '<div class="ach-progress-label">All focus badges unlocked!</div>') +
+
+    '<p class="section-label" style="margin-top:22px;">Focus milestones &middot; ' + unlockedCount + '/' + TOTAL_HOUR_MILESTONES.length + '</p>' +
+    '<div class="badge-grid">' + TOTAL_HOUR_MILESTONES.map(function(m){
+      const unlocked = state.achievements.total[m];
+      return '<div class="badge ' + (unlocked?'unlocked':'') + '"><div class="badge-num">' + m + '</div><div class="badge-lbl">Hour' + (m===1?'':'s') + '</div>' + (unlocked ? '<div class="badge-date">' + unlocked + '</div>' : '') + '</div>';
+    }).join('') + '</div>' +
+
+    '<p class="section-label" style="margin-top:22px;">Daily study day achievements</p>' +
+    '<div class="badge-grid">' + DAILY_HOUR_MILESTONES.map(function(m){
+      const unlocked = state.achievements.daily[m];
+      return '<div class="badge ' + (unlocked?'unlocked':'') + '"><div class="badge-num">' + m + '+</div><div class="badge-lbl">Hour Day</div>' + (unlocked ? '<div class="badge-date">' + unlocked + '</div>' : '') + '</div>';
+    }).join('') + '</div>';
+
+  document.getElementById('panelCloseBtn2').addEventListener('click', closeOverlay);
+}
+
+/* ---------- to-do list ---------- */
+function renderTodoOverlay(){
+  const panel = document.getElementById('overlayPanel');
+  panel.innerHTML =
+    '<div class="session-panel-head"><h2>To-do list</h2><button class="panel-close-btn" id="panelCloseBtn2">&times;</button></div>' +
+    '<div class="todo-add-row"><input type="text" id="todoInput" placeholder="Add a task"><button class="btn btn-primary" id="todoAddBtn" style="font-size:13px; padding:9px 16px;">Add</button></div>' +
+    '<div id="todoList">' + (state.todos.length ? state.todos.map(function(t){
+      return '<div class="todo-item"><button class="todo-check ' + (t.done?'checked':'') + '" data-id="' + t.id + '">' + (t.done?'\u2713':'') + '</button><span class="todo-text ' + (t.done?'done':'') + '">' + t.text + '</span><button class="del-btn" data-todo="' + t.id + '">&times;</button></div>';
+    }).join('') : '<div class="empty-state">Nothing on your list yet.</div>') + '</div>';
+
+  document.getElementById('panelCloseBtn2').addEventListener('click', closeOverlay);
+  document.getElementById('todoAddBtn').addEventListener('click', addTodo);
+  document.getElementById('todoInput').addEventListener('keydown', function(e){ if(e.key==='Enter') addTodo(); });
+  panel.querySelectorAll('.todo-check').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const t = state.todos.find(function(x){ return x.id===btn.dataset.id; });
+      if(t){ t.done = !t.done; storageSet(STORAGE_KEYS.todos, state.todos); renderTodoOverlay(); }
+    });
+  });
+  panel.querySelectorAll('.del-btn[data-todo]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      state.todos = state.todos.filter(function(t){ return t.id!==btn.dataset.todo; });
+      storageSet(STORAGE_KEYS.todos, state.todos);
+      renderTodoOverlay();
+    });
+  });
+}
+function addTodo(){
+  const input = document.getElementById('todoInput');
+  const text = input.value.trim();
+  if(!text) return;
+  state.todos.push({ id:'td'+Date.now(), text, done:false });
+  storageSet(STORAGE_KEYS.todos, state.todos);
+  input.value='';
+  renderTodoOverlay();
+}
+
 
 /* Shruti insight */
 function renderInsight(){
@@ -1186,14 +1432,26 @@ function renderTrendsChart(){
     currentBuckets = dayStrs.map(function(d){ return { start:d, end:d }; });
   } else if(activePeriod==='month'){
     title = 'This month';
+    const now = new Date();
+    const year = now.getFullYear(), month = now.getMonth();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const weekBoundaries = [[1,7],[8,14],[15,21],[22,daysInMonth]];
     labels = ['Week 1','Week 2','Week 3','Week 4'];
-    const weekRanges = [[27,21],[20,14],[13,7],[6,0]];
-    datasets = state.subjects.map(function(subj){
-      return { label: subj.name, data: weekRanges.map(function(r){ return sumForSubjectRange(subj.id, daysAgoStr(r[0]), daysAgoStr(r[1]))/60; }), backgroundColor: subj.color, borderRadius:3 };
+    const monthRanges = weekBoundaries.map(function(r){
+      return { start: fmtDate(new Date(year,month,r[0])), end: fmtDate(new Date(year,month,r[1])) };
     });
-    totalMin = sumForRange(daysAgoStr(27), todayStr());
-    prevMin = sumForRange(daysAgoStr(55), daysAgoStr(28));
-    currentBuckets = weekRanges.map(function(r){ return { start: daysAgoStr(r[0]), end: daysAgoStr(r[1]) }; });
+    datasets = state.subjects.map(function(subj){
+      return { label: subj.name, data: monthRanges.map(function(r){ return sumForSubjectRange(subj.id, r.start, r.end)/60; }), backgroundColor: subj.color, borderRadius:3 };
+    });
+    const monthStartStr = fmtDate(new Date(year,month,1));
+    const monthEndStr = fmtDate(new Date(year,month,daysInMonth));
+    totalMin = sumForRange(monthStartStr, todayStr()<monthEndStr?todayStr():monthEndStr);
+    const prevMonthRef = new Date(year, month-1, 1);
+    const pYear = prevMonthRef.getFullYear(), pMonth = prevMonthRef.getMonth();
+    const prevDaysInMonth = new Date(pYear, pMonth+1, 0).getDate();
+    const sameDayCap = Math.min(now.getDate(), prevDaysInMonth);
+    prevMin = sumForRange(fmtDate(new Date(pYear,pMonth,1)), fmtDate(new Date(pYear,pMonth,sameDayCap)));
+    currentBuckets = monthRanges;
   } else {
     title = 'This year';
     const now = new Date();
@@ -1207,8 +1465,9 @@ function renderTrendsChart(){
     datasets = state.subjects.map(function(subj){
       return { label: subj.name, data: monthRanges.map(function(r){ return sumForSubjectRange(subj.id, r.start, r.end)/60; }), backgroundColor: subj.color, borderRadius:3 };
     });
-    totalMin = sumForRange(fmtDate(new Date(year,0,1)), fmtDate(new Date(year,11,31)));
-    prevMin = sumForRange(fmtDate(new Date(year-1,0,1)), fmtDate(new Date(year-1,11,31)));
+    totalMin = sumForRange(fmtDate(new Date(year,0,1)), todayStr());
+    const sameDateLastYear = fmtDate(new Date(year-1, now.getMonth(), now.getDate()));
+    prevMin = sumForRange(fmtDate(new Date(year-1,0,1)), sameDateLastYear);
     currentBuckets = monthRanges;
   }
 
@@ -1246,9 +1505,10 @@ function showBarBreakdown(idx){
   const totals = state.subjects.map(function(s){
     return { subj:s, min: sumForSubjectRange(s.id, bucket.start, bucket.end) };
   }).filter(function(t){ return t.min>0; }).sort(function(a,b){ return b.min-a.min; });
+  const barTotal = totals.reduce(function(a,t){ return a+t.min; },0);
   const el = document.getElementById('barBreakdown');
   if(!totals.length){ el.innerHTML = '<div class="empty-state" style="padding:12px 0;">No sessions in this period.</div>'; return; }
-  el.innerHTML = '<div class="breakdown-head">' + label + '</div><ul class="breakdown-list">' + totals.map(function(t){
+  el.innerHTML = '<div class="breakdown-head" style="display:flex; justify-content:space-between; align-items:center;"><span>' + label + '</span><span class="mono" style="color:var(--text);">' + minutesToH(barTotal) + ' total</span></div><ul class="breakdown-list">' + totals.map(function(t){
     return '<li><span class="bd-left"><span class="dot" style="background:'+t.subj.color+'"></span>'+t.subj.name+'</span><span class="mono">'+minutesToH(t.min)+'</span></li>';
   }).join('') + '</ul>';
 }
