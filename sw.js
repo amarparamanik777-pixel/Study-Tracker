@@ -1,5 +1,9 @@
-const CACHE = 'study-log-v5';
-const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './sound-start.mp3'];
+const CACHE = 'study-log-v6';
+const ASSETS = [
+  './', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './sound-start.mp3',
+  './badge-6h.jpg', './badge-7h.jpg', './badge-8h.jpg', './badge-9h.jpg', './badge-10h.jpg', './badge-12h.jpg',
+  './popup-6h.jpg', './popup-7h.jpg', './popup-8h.jpg', './popup-9h.jpg', './popup-10h.jpg', './popup-12h.jpg'
+];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
