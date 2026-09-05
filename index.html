@@ -979,16 +979,23 @@ function processAchievementQueue(){
 function showAchievementPopup(type, value){
   const backdrop = document.createElement('div');
   backdrop.className = 'ach-popup-backdrop';
-  const title = type==='total' ? (value + 'H FOCUS') : (value + '+ HOURS STUDY DAY');
-  const msg = type==='total' ? 'You\u2019ve focused ' + value + ' hours in total. Keep building.' : 'You\u2019ve put in the work today. Consistency now, results later.';
-  backdrop.innerHTML =
-    '<div class="ach-popup-card">' +
-      '<div class="ach-popup-unlocked">Achievement Unlocked</div>' +
-      '<div class="ach-popup-num">' + value + (type==='total' ? 'H' : '') + '</div>' +
-      '<div class="ach-popup-sub">' + title + '</div>' +
-      '<div class="ach-popup-msg">' + msg + '</div>' +
-      '<button class="btn btn-primary" id="closeAchPopup" style="width:100%; margin-top:20px;">Nice</button>' +
-    '</div>';
+  if(type==='daily'){
+    backdrop.innerHTML =
+      '<div class="ach-popup-card" style="padding:0; overflow:hidden;">' +
+        '<img src="popup-' + value + 'h.jpg" alt="' + value + '+ hour study day unlocked" style="width:100%; display:block;">' +
+        '<div style="padding:18px 20px 22px;"><button class="btn btn-primary" id="closeAchPopup" style="width:100%;">Nice</button></div>' +
+      '</div>';
+  } else {
+    const msg = 'You\u2019ve focused ' + value + ' hours in total. Keep building.';
+    backdrop.innerHTML =
+      '<div class="ach-popup-card">' +
+        '<div class="ach-popup-unlocked">Achievement Unlocked</div>' +
+        '<div class="ach-popup-num">' + value + 'H</div>' +
+        '<div class="ach-popup-sub">' + value + 'H FOCUS</div>' +
+        '<div class="ach-popup-msg">' + msg + '</div>' +
+        '<button class="btn btn-primary" id="closeAchPopup" style="width:100%; margin-top:20px;">Nice</button>' +
+      '</div>';
+  }
   document.body.appendChild(backdrop);
   document.getElementById('closeAchPopup').addEventListener('click', function(){
     backdrop.remove();
@@ -1023,7 +1030,10 @@ function renderAchievementsOverlay(){
     '<p class="section-label" style="margin-top:22px;">Daily study day achievements</p>' +
     '<div class="badge-grid">' + DAILY_HOUR_MILESTONES.map(function(m){
       const unlocked = state.achievements.daily[m];
-      return '<div class="badge ' + (unlocked?'unlocked':'') + '"><div class="badge-num">' + m + '+</div><div class="badge-lbl">Hour Day</div>' + (unlocked ? '<div class="badge-date">' + unlocked + '</div>' : '') + '</div>';
+      return '<div class="badge img-badge ' + (unlocked?'unlocked':'') + '">' +
+        '<img src="badge-' + m + 'h.jpg" alt="' + m + '+ hour day badge" style="width:100%; border-radius:10px;' + (unlocked?'':' filter:grayscale(1); opacity:0.35;') + '">' +
+        (unlocked ? '<div class="badge-date">' + unlocked + '</div>' : '') +
+      '</div>';
     }).join('') + '</div>';
 
   document.getElementById('panelCloseBtn2').addEventListener('click', closeOverlay);
