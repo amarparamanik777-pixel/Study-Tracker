@@ -129,6 +129,30 @@
   .ach-popup-sub{font-size:13px; color:var(--accent); text-transform:uppercase; letter-spacing:1px; margin-top:6px; font-weight:600;}
   .ach-popup-msg{font-size:12.5px; color:var(--text-2); margin-top:14px; line-height:1.5;}
 
+  /* averages */
+  .ring-chart-wrap{position:relative; width:220px; height:220px; margin:10px auto 16px;}
+  .ring-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; pointer-events:none;}
+  .ring-center .rc-label{font-size:10.5px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.5px;}
+  .ring-center .rc-val{font-family:'Bitter',serif; font-weight:700; font-size:22px; margin-top:4px;}
+  .avg-section{margin-bottom:26px;}
+  .tap-hint{font-size:11px; color:var(--text-3); text-align:center; margin-top:-8px; margin-bottom:10px;}
+  .weekday-bar-row{display:flex; align-items:flex-end; gap:6px; height:120px; margin:14px 0 4px;}
+  .weekday-bar-col{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px;}
+  .weekday-bar{width:100%; background:var(--accent); border-radius:4px 4px 0 0; min-height:2px;}
+  .weekday-bar-lbl{font-size:10px; color:var(--text-3);}
+
+  /* badge day-list drill down */
+  .badge.clickable{cursor:pointer;}
+  .day-row{border-bottom:1px solid var(--border);}
+  .day-row:last-child{border-bottom:none;}
+  .day-row-head{display:flex; align-items:center; justify-content:space-between; padding:11px 2px; cursor:pointer;}
+  .day-row-head .drh-date{font-size:13px;}
+  .day-row-head .drh-right{display:flex; align-items:center; gap:8px; color:var(--text-2); font-family:'IBM Plex Mono',monospace; font-size:13px;}
+  .day-row-arrow{transition:transform 0.15s; color:var(--text-3);}
+  .day-row-arrow.open{transform:rotate(180deg);}
+  .day-row-detail{display:none; padding:0 2px 12px;}
+  .day-row-detail.open{display:block;}
+
   .tab-panel{padding:20px;}
   .section-label{
     font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
@@ -407,6 +431,9 @@ let activeBusyDay = 1;
 let trendsChart = null;
 let currentBuckets = [];
 let punchOffset = 0;
+let avgPeriod = 'day';
+let avgRingChart = null;
+let sessionRingChart = null;
 let compareSortMode = 'new-old';
 let allTimeExpanded = false;
 let pendingCompletionOnLoad = false;
@@ -616,11 +643,13 @@ function buildShell(){
         '<h2 class="drawer-title">STUDY LOG</h2>' +
         '<button class="drawer-item" id="drawerTodoBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>To-do list</button>' +
         '<button class="drawer-item" id="drawerAchBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L7 21l5-2.5L17 21l-1.5-8.5"/></svg>Your Achievements</button>' +
+        '<button class="drawer-item" id="drawerAvgBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9h-9z"/></svg>Study Averages</button>' +
       '</div>';
     document.body.appendChild(drawerBackdrop);
     drawerBackdrop.addEventListener('click', closeDrawer);
     document.getElementById('drawerTodoBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('todo'); });
     document.getElementById('drawerAchBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('achievements'); });
+    document.getElementById('drawerAvgBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('averages'); });
   }
   if(!document.getElementById('overlayBackdrop')){
     const overlayBackdrop = document.createElement('div');
@@ -635,10 +664,12 @@ function buildShell(){
 
 function openDrawer(){ document.getElementById('drawerBackdrop').classList.add('open'); }
 function closeDrawer(){ document.getElementById('drawerBackdrop').classList.remove('open'); }
-function openOverlay(kind){
+function openOverlay(kind, arg){
   document.getElementById('overlayBackdrop').classList.add('open');
   if(kind==='todo') renderTodoOverlay();
   if(kind==='achievements') renderAchievementsOverlay();
+  if(kind==='averages') renderAveragesOverlay();
+  if(kind==='badgeDetail') renderBadgeDetailOverlay(arg);
 }
 function closeOverlay(){ document.getElementById('overlayBackdrop').classList.remove('open'); }
 
@@ -942,6 +973,64 @@ function backfillAchievements(){
   if(changed) storageSet(STORAGE_KEYS.achievements, state.achievements);
 }
 
+/* ---------- shared date-math for averages & milestone day-counts ---------- */
+function firstSessionDate(){
+  if(!state.sessions.length) return null;
+  return state.sessions.reduce(function(min,s){ const d=fmtDate(s.start); return (!min||d<min)?d:min; }, null);
+}
+function daysElapsedSinceFirst(){
+  const first = firstSessionDate();
+  if(!first) return 1;
+  return Math.max(1, Math.round((new Date(todayStr()) - new Date(first))/86400000)+1);
+}
+function weeksElapsedSinceFirst(){ return Math.max(1, Math.ceil(daysElapsedSinceFirst()/7)); }
+function monthsElapsedSinceFirst(){
+  const first = firstSessionDate();
+  if(!first) return 1;
+  const f = new Date(first), n = new Date(todayStr());
+  return Math.max(1, (n.getFullYear()-f.getFullYear())*12 + (n.getMonth()-f.getMonth()) + 1);
+}
+function yearsElapsedSinceFirst(){
+  const first = firstSessionDate();
+  if(!first) return 1;
+  return Math.max(1, new Date(todayStr()).getFullYear() - new Date(first).getFullYear() + 1);
+}
+function weekdayOccurrencesSinceFirst(weekdayIdx){
+  const first = firstSessionDate();
+  if(!first) return 1;
+  let count=0;
+  let cursor = new Date(first);
+  const end = new Date(todayStr());
+  while(cursor<=end){
+    if(cursor.getDay()===weekdayIdx) count++;
+    cursor.setDate(cursor.getDate()+1);
+  }
+  return Math.max(1,count);
+}
+function periodDenominator(period){
+  if(period==='day') return daysElapsedSinceFirst();
+  if(period==='week') return weeksElapsedSinceFirst();
+  if(period==='month') return monthsElapsedSinceFirst();
+  return yearsElapsedSinceFirst();
+}
+/* exact distinct-study-days count at the moment each total-hour milestone was first reached */
+function computeDaysToMilestones(){
+  const sorted = state.sessions.slice().sort(function(a,b){ return a.start-b.start; });
+  let cumMin = 0;
+  const daysSeen = new Set();
+  const daysToReach = {};
+  let nextIdx = 0;
+  sorted.forEach(function(s){
+    cumMin += s.durationMin;
+    daysSeen.add(fmtDate(s.start));
+    while(nextIdx < TOTAL_HOUR_MILESTONES.length && cumMin >= TOTAL_HOUR_MILESTONES[nextIdx]*60){
+      daysToReach[TOTAL_HOUR_MILESTONES[nextIdx]] = daysSeen.size;
+      nextIdx++;
+    }
+  });
+  return daysToReach;
+}
+
 /* ---------- achievements ---------- */
 let achievementPopupQueue = [];
 function checkAchievements(){
@@ -1009,6 +1098,7 @@ function renderAchievementsOverlay(){
   const prevMilestone = TOTAL_HOUR_MILESTONES.filter(function(m){ return state.achievements.total[m]; }).pop() || 0;
   const progressPct = nextMilestone ? Math.min(100, Math.round(((allTimeHours-prevMilestone)/(nextMilestone-prevMilestone))*100)) : 100;
   const unlockedCount = TOTAL_HOUR_MILESTONES.filter(function(m){ return state.achievements.total[m]; }).length;
+  const daysToReach = computeDaysToMilestones();
 
   panel.innerHTML =
     '<div class="session-panel-head"><h2>Your Achievements</h2><button class="panel-close-btn" id="panelCloseBtn2">&times;</button></div>' +
@@ -1022,9 +1112,11 @@ function renderAchievementsOverlay(){
     ) : '<div class="ach-progress-label">All focus badges unlocked!</div>') +
 
     '<p class="section-label" style="margin-top:22px;">Focus milestones &middot; ' + unlockedCount + '/' + TOTAL_HOUR_MILESTONES.length + '</p>' +
+    '<p class="tap-hint" style="margin-top:-4px;">Tap an unlocked badge to see which days count toward it</p>' +
     '<div class="badge-grid">' + TOTAL_HOUR_MILESTONES.map(function(m){
       const unlocked = state.achievements.total[m];
-      return '<div class="badge ' + (unlocked?'unlocked':'') + '"><div class="badge-num">' + m + '</div><div class="badge-lbl">Hour' + (m===1?'':'s') + '</div>' + (unlocked ? '<div class="badge-date">' + unlocked + '</div>' : '') + '</div>';
+      const days = daysToReach[m];
+      return '<div class="badge ' + (unlocked?'unlocked clickable':'') + '" data-milestone="' + m + '"><div class="badge-num">' + m + '</div><div class="badge-lbl">Hour' + (m===1?'':'s') + '</div>' + (unlocked ? ('<div class="badge-date">' + unlocked + (days?(' \u00b7 '+days+'d'):'') + '</div>') : '') + '</div>';
     }).join('') + '</div>' +
 
     '<p class="section-label" style="margin-top:22px;">Daily study day achievements</p>' +
@@ -1037,6 +1129,178 @@ function renderAchievementsOverlay(){
     }).join('') + '</div>';
 
   document.getElementById('panelCloseBtn2').addEventListener('click', closeOverlay);
+  panel.querySelectorAll('.badge.clickable').forEach(function(b){
+    b.addEventListener('click', function(){ openOverlay('badgeDetail', parseInt(b.dataset.milestone,10)); });
+  });
+}
+
+function formatMinutesShort(min){
+  min = Math.round(min);
+  if(min<60) return min+'m';
+  const h = Math.floor(min/60), m = min%60;
+  return h+'h'+(m?' '+m+'m':'');
+}
+
+/* ---------- Study Averages overlay ---------- */
+function renderAveragesOverlay(){
+  const panel = document.getElementById('overlayPanel');
+  panel.innerHTML =
+    '<div class="session-panel-head"><h2>Study Averages</h2><button class="panel-close-btn" id="panelCloseBtn2">&times;</button></div>' +
+
+    '<div class="avg-section">' +
+      '<p class="section-label">Average study time</p>' +
+      '<div class="period-row" id="avgPeriodRow">' +
+        '<button class="period-btn" data-p="day">Day</button>' +
+        '<button class="period-btn" data-p="week">Week</button>' +
+        '<button class="period-btn" data-p="month">Month</button>' +
+        '<button class="period-btn" data-p="year">Year</button>' +
+      '</div>' +
+      '<div class="ring-chart-wrap" id="avgRingWrap"><canvas id="avgRingCanvas"></canvas><div class="ring-center" id="avgRingCenter"></div></div>' +
+      '<p class="tap-hint">Tap the ring for the full subject breakdown</p>' +
+      '<div id="avgBreakdown"></div>' +
+    '</div>' +
+
+    '<div class="avg-section">' +
+      '<p class="section-label">Average session length</p>' +
+      '<div class="ring-chart-wrap" id="sessionRingWrap"><canvas id="sessionRingCanvas"></canvas><div class="ring-center" id="sessionRingCenter"></div></div>' +
+      '<p class="tap-hint">Tap the ring for the full subject breakdown</p>' +
+      '<div id="sessionBreakdown"></div>' +
+    '</div>' +
+
+    '<div class="avg-section">' +
+      '<p class="section-label">Average by day of week</p>' +
+      '<div class="weekday-bar-row" id="weekdayBarRow"></div>' +
+    '</div>';
+
+  document.querySelectorAll('#avgPeriodRow .period-btn').forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.p===avgPeriod);
+    btn.addEventListener('click', function(){ avgPeriod = btn.dataset.p; renderAveragesOverlay(); });
+  });
+  document.getElementById('panelCloseBtn2').addEventListener('click', closeOverlay);
+
+  renderAvgRing();
+  renderSessionRing();
+  renderWeekdayBars();
+}
+
+function renderAvgRing(){
+  const denom = periodDenominator(avgPeriod);
+  const subjTotals = state.subjects.map(function(s){
+    const min = state.sessions.filter(function(x){ return x.subjectId===s.id; }).reduce(function(a,x){ return a+x.durationMin; },0);
+    return { subj:s, avgMin: min/denom };
+  }).filter(function(t){ return t.avgMin>0; });
+  const overallAvgMin = subjTotals.reduce(function(a,t){ return a+t.avgMin; },0);
+
+  const periodLabel = {day:'Per day', week:'Per week', month:'Per month', year:'Per year'}[avgPeriod];
+  document.getElementById('avgRingCenter').innerHTML = '<div class="rc-label">' + periodLabel + '</div><div class="rc-val">' + formatMinutesShort(overallAvgMin) + '</div>';
+  document.getElementById('avgBreakdown').innerHTML = '';
+
+  if(avgRingChart){ avgRingChart.destroy(); avgRingChart=null; }
+  if(!subjTotals.length){
+    document.getElementById('avgBreakdown').innerHTML = '<div class="empty-state" style="padding:16px 0;">Not enough data yet.</div>';
+    return;
+  }
+  if(window.Chart){
+    avgRingChart = new Chart(document.getElementById('avgRingCanvas'), {
+      type:'doughnut',
+      data:{ labels: subjTotals.map(function(t){return t.subj.name;}), datasets:[{ data: subjTotals.map(function(t){return t.avgMin;}), backgroundColor: subjTotals.map(function(t){return t.subj.color;}), borderWidth:0 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'72%', plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
+    });
+  }
+  document.getElementById('avgRingWrap').onclick = function(){ renderAvgBreakdownList(subjTotals); };
+}
+function renderAvgBreakdownList(subjTotals){
+  const sorted = subjTotals.slice().sort(function(a,b){ return b.avgMin-a.avgMin; });
+  document.getElementById('avgBreakdown').innerHTML = '<ul class="breakdown-list">' + sorted.map(function(t){
+    return '<li><span class="bd-left"><span class="dot" style="background:'+t.subj.color+'"></span>'+t.subj.name+'</span><span class="mono">'+formatMinutesShort(t.avgMin)+'</span></li>';
+  }).join('') + '</ul>';
+}
+
+function renderSessionRing(){
+  const subjSessionAvg = state.subjects.map(function(s){
+    const sessions = state.sessions.filter(function(x){ return x.subjectId===s.id; });
+    if(!sessions.length) return null;
+    const avg = sessions.reduce(function(a,x){ return a+x.durationMin; },0)/sessions.length;
+    return { subj:s, avgMin: avg };
+  }).filter(function(t){ return t; });
+  const overallSessions = state.sessions.length;
+  const overallAvg = overallSessions ? state.sessions.reduce(function(a,x){ return a+x.durationMin; },0)/overallSessions : 0;
+
+  document.getElementById('sessionRingCenter').innerHTML = '<div class="rc-label">Avg session</div><div class="rc-val">' + formatMinutesShort(overallAvg) + '</div>';
+  document.getElementById('sessionBreakdown').innerHTML = '';
+
+  if(sessionRingChart){ sessionRingChart.destroy(); sessionRingChart=null; }
+  if(!subjSessionAvg.length){
+    document.getElementById('sessionBreakdown').innerHTML = '<div class="empty-state" style="padding:16px 0;">Not enough data yet.</div>';
+    return;
+  }
+  if(window.Chart){
+    sessionRingChart = new Chart(document.getElementById('sessionRingCanvas'), {
+      type:'doughnut',
+      data:{ labels: subjSessionAvg.map(function(t){return t.subj.name;}), datasets:[{ data: subjSessionAvg.map(function(t){return t.avgMin;}), backgroundColor: subjSessionAvg.map(function(t){return t.subj.color;}), borderWidth:0 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'72%', plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
+    });
+  }
+  document.getElementById('sessionRingWrap').onclick = function(){ renderSessionBreakdownList(subjSessionAvg); };
+}
+function renderSessionBreakdownList(subjSessionAvg){
+  const sorted = subjSessionAvg.slice().sort(function(a,b){ return b.avgMin-a.avgMin; });
+  document.getElementById('sessionBreakdown').innerHTML = '<ul class="breakdown-list">' + sorted.map(function(t){
+    return '<li><span class="bd-left"><span class="dot" style="background:'+t.subj.color+'"></span>'+t.subj.name+'</span><span class="mono">'+formatMinutesShort(t.avgMin)+'</span></li>';
+  }).join('') + '</ul>';
+}
+
+function renderWeekdayBars(){
+  const data = [];
+  for(let d=0; d<7; d++){
+    const occ = weekdayOccurrencesSinceFirst(d);
+    const totalMin = state.sessions.filter(function(s){ return new Date(s.start).getDay()===d; }).reduce(function(a,s){ return a+s.durationMin; },0);
+    data.push(totalMin/occ);
+  }
+  const maxVal = Math.max.apply(null, data) || 1;
+  const row = document.getElementById('weekdayBarRow');
+  row.innerHTML = data.map(function(v,i){
+    const heightPct = Math.max(3, Math.round((v/maxVal)*100));
+    return '<div class="weekday-bar-col"><div class="weekday-bar" style="height:'+heightPct+'%;" title="'+formatMinutesShort(v)+'"></div><div class="weekday-bar-lbl">'+DAY_NAMES[i]+'</div></div>';
+  }).join('');
+}
+
+function renderBadgeDetailOverlay(milestone){
+
+  const panel = document.getElementById('overlayPanel');
+  const daysToReach = computeDaysToMilestones();
+  const daysCount = daysToReach[milestone];
+
+  const byDay = {};
+  state.sessions.forEach(function(s){ const d=fmtDate(s.start); (byDay[d]=byDay[d]||[]).push(s); });
+  const dates = Object.keys(byDay).sort().reverse();
+
+  panel.innerHTML =
+    '<div class="session-panel-head"><h2>' + milestone + 'H Focus</h2><button class="panel-close-btn" id="panelCloseBtn2">&times;</button></div>' +
+    '<p class="hint" style="text-align:left; margin:0 0 16px;">' + (daysCount ? ('Reached across ' + daysCount + ' study day' + (daysCount===1?'':'s') + '.') : 'Not reached yet.') + ' Tap any date to see the subject breakdown.</p>' +
+    '<div id="badgeDayList">' + dates.map(function(date){
+      const sessions = byDay[date];
+      const total = sessions.reduce(function(a,s){ return a+s.durationMin; },0);
+      const label = date===todayStr() ? 'Today' : new Date(date).toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'});
+      const bySubj = {};
+      sessions.forEach(function(s){ bySubj[s.subjectId]=(bySubj[s.subjectId]||0)+s.durationMin; });
+      const subjRows = Object.entries(bySubj).sort(function(a,b){ return b[1]-a[1]; }).map(function(entry){
+        const subj = subjectById(entry[0]);
+        return '<li><span class="bd-left"><span class="dot" style="background:'+(subj?subj.color:'#888')+'"></span>'+(subj?subj.name:'Deleted subject')+'</span><span class="mono">'+minutesToH(entry[1])+'</span></li>';
+      }).join('');
+      return '<div class="day-row"><div class="day-row-head" data-date="' + date + '"><span class="drh-date">' + label + '</span><span class="drh-right">' + minutesToH(total) + '<span class="day-row-arrow">\u25be</span></span></div><div class="day-row-detail" id="detail-' + date + '"><ul class="breakdown-list">' + subjRows + '</ul></div></div>';
+    }).join('') + '</div>';
+
+  document.getElementById('panelCloseBtn2').addEventListener('click', closeOverlay);
+  panel.querySelectorAll('.day-row-head').forEach(function(head){
+    head.addEventListener('click', function(){
+      const date = head.dataset.date;
+      const detail = document.getElementById('detail-'+date);
+      const arrow = head.querySelector('.day-row-arrow');
+      detail.classList.toggle('open');
+      arrow.classList.toggle('open');
+    });
+  });
 }
 
 /* ---------- to-do list ---------- */
@@ -1512,13 +1776,16 @@ function showBarBreakdown(idx){
   const bucket = activePeriod==='day' ? currentBuckets[0] : currentBuckets[idx];
   if(!bucket) return;
   const label = activePeriod==='day' ? state.subjects[idx].name : trendsChart.data.labels[idx];
+  const dateSubtitle = (activePeriod==='week' || activePeriod==='day')
+    ? new Date(bucket.start).toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'})
+    : (bucket.start===bucket.end ? bucket.start : bucket.start + ' \u2013 ' + bucket.end);
   const totals = state.subjects.map(function(s){
     return { subj:s, min: sumForSubjectRange(s.id, bucket.start, bucket.end) };
   }).filter(function(t){ return t.min>0; }).sort(function(a,b){ return b.min-a.min; });
   const barTotal = totals.reduce(function(a,t){ return a+t.min; },0);
   const el = document.getElementById('barBreakdown');
   if(!totals.length){ el.innerHTML = '<div class="empty-state" style="padding:12px 0;">No sessions in this period.</div>'; return; }
-  el.innerHTML = '<div class="breakdown-head" style="display:flex; justify-content:space-between; align-items:center;"><span>' + label + '</span><span class="mono" style="color:var(--text);">' + minutesToH(barTotal) + ' total</span></div><ul class="breakdown-list">' + totals.map(function(t){
+  el.innerHTML = '<div class="breakdown-head" style="display:flex; flex-direction:column; gap:1px;"><div style="display:flex; justify-content:space-between; align-items:center;"><span>' + label + '</span><span class="mono" style="color:var(--text);">' + minutesToH(barTotal) + ' total</span></div><span style="font-size:10.5px; color:var(--text-3); font-family:\'IBM Plex Mono\',monospace;">' + dateSubtitle + '</span></div><ul class="breakdown-list">' + totals.map(function(t){
     return '<li><span class="bd-left"><span class="dot" style="background:'+t.subj.color+'"></span>'+t.subj.name+'</span><span class="mono">'+minutesToH(t.min)+'</span></li>';
   }).join('') + '</ul>';
 }
