@@ -431,6 +431,8 @@ let activeBusyDay = 1;
 let trendsChart = null;
 let currentBuckets = [];
 let weekOffset = 0;
+let monthOffset = 0;
+let yearOffset = 0;
 let lastBarIdx = null;
 let punchOffset = 0;
 let avgPeriod = 'day';
@@ -1589,10 +1591,20 @@ function renderTrends(){
     '</div>';
 
   document.querySelectorAll('#periodRow .period-btn').forEach(function(btn){
-    btn.addEventListener('click', function(){ activePeriod = btn.dataset.p; weekOffset = 0; renderTrends(); });
+    btn.addEventListener('click', function(){ activePeriod = btn.dataset.p; weekOffset = 0; monthOffset = 0; yearOffset = 0; renderTrends(); });
   });
-  document.getElementById('weekPrev').addEventListener('click', function(){ weekOffset += 1; renderTrendsChart(); });
-  document.getElementById('weekNext').addEventListener('click', function(){ weekOffset = Math.max(0, weekOffset-1); renderTrendsChart(); });
+  document.getElementById('weekPrev').addEventListener('click', function(){
+    if(activePeriod==='week') weekOffset += 1;
+    else if(activePeriod==='month') monthOffset += 1;
+    else if(activePeriod==='year') yearOffset += 1;
+    renderTrendsChart();
+  });
+  document.getElementById('weekNext').addEventListener('click', function(){
+    if(activePeriod==='week') weekOffset = Math.max(0, weekOffset-1);
+    else if(activePeriod==='month') monthOffset = Math.max(0, monthOffset-1);
+    else if(activePeriod==='year') yearOffset = Math.max(0, yearOffset-1);
+    renderTrendsChart();
+  });
   document.getElementById('saveGoalBtn').addEventListener('click', function(){
     const v = parseInt(document.getElementById('goalInput').value,10);
     if(v && v>0){ state.settings.dailyGoalMin = v; storageSet(STORAGE_KEYS.settings, state.settings); renderTrends(); }
@@ -1711,9 +1723,10 @@ function renderTrendsChart(){
     prevMin = sumForRange(daysAgoStr(13+shift), daysAgoStr(7+shift));
     currentBuckets = dayStrs.map(function(d){ return { start:d, end:d }; });
   } else if(activePeriod==='month'){
-    title = 'This month';
     const now = new Date();
-    const year = now.getFullYear(), month = now.getMonth();
+    const refDate = new Date(now.getFullYear(), now.getMonth() - monthOffset, 1);
+    const year = refDate.getFullYear(), month = refDate.getMonth();
+    const isCurrentMonth = monthOffset===0;
     const daysInMonth = new Date(year, month+1, 0).getDate();
     const weekBoundaries = [[1,7],[8,14],[15,21],[22,daysInMonth]];
     labels = ['Week 1','Week 2','Week 3','Week 4'];
@@ -1723,19 +1736,20 @@ function renderTrendsChart(){
     datasets = state.subjects.map(function(subj){
       return { label: subj.name, data: monthRanges.map(function(r){ return sumForSubjectRange(subj.id, r.start, r.end)/60; }), backgroundColor: subj.color, borderRadius:3 };
     });
+    title = isCurrentMonth ? 'This month' : refDate.toLocaleDateString('en-US',{month:'long', year:'numeric'});
     const monthStartStr = fmtDate(new Date(year,month,1));
     const monthEndStr = fmtDate(new Date(year,month,daysInMonth));
-    totalMin = sumForRange(monthStartStr, todayStr()<monthEndStr?todayStr():monthEndStr);
+    totalMin = sumForRange(monthStartStr, isCurrentMonth ? todayStr() : monthEndStr);
     const prevMonthRef = new Date(year, month-1, 1);
     const pYear = prevMonthRef.getFullYear(), pMonth = prevMonthRef.getMonth();
     const prevDaysInMonth = new Date(pYear, pMonth+1, 0).getDate();
-    const sameDayCap = Math.min(now.getDate(), prevDaysInMonth);
+    const sameDayCap = isCurrentMonth ? Math.min(now.getDate(), prevDaysInMonth) : prevDaysInMonth;
     prevMin = sumForRange(fmtDate(new Date(pYear,pMonth,1)), fmtDate(new Date(pYear,pMonth,sameDayCap)));
     currentBuckets = monthRanges;
   } else {
-    title = 'This year';
     const now = new Date();
-    const year = now.getFullYear();
+    const year = now.getFullYear() - yearOffset;
+    const isCurrentYear = yearOffset===0;
     labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const monthRanges = [];
     for(let mo=0; mo<12; mo++){
@@ -1745,8 +1759,9 @@ function renderTrendsChart(){
     datasets = state.subjects.map(function(subj){
       return { label: subj.name, data: monthRanges.map(function(r){ return sumForSubjectRange(subj.id, r.start, r.end)/60; }), backgroundColor: subj.color, borderRadius:3 };
     });
-    totalMin = sumForRange(fmtDate(new Date(year,0,1)), todayStr());
-    const sameDateLastYear = fmtDate(new Date(year-1, now.getMonth(), now.getDate()));
+    title = isCurrentYear ? 'This year' : String(year);
+    totalMin = sumForRange(fmtDate(new Date(year,0,1)), isCurrentYear ? todayStr() : fmtDate(new Date(year,11,31)));
+    const sameDateLastYear = isCurrentYear ? fmtDate(new Date(year-1, now.getMonth(), now.getDate())) : fmtDate(new Date(year-1,11,31));
     prevMin = sumForRange(fmtDate(new Date(year-1,0,1)), sameDateLastYear);
     currentBuckets = monthRanges;
   }
@@ -1754,10 +1769,19 @@ function renderTrendsChart(){
   document.getElementById('trendTitle').textContent = title;
   document.getElementById('trendTotal').textContent = minutesToH(totalMin);
   const weekNavRow = document.getElementById('weekNavRow');
+  const rangeLabelEl = document.getElementById('weekRangeLabel');
   if(activePeriod==='week'){
     weekNavRow.style.display = 'flex';
-    document.getElementById('weekRangeLabel').textContent = currentBuckets[0].start.slice(5) + ' \u2013 ' + currentBuckets[6].start.slice(5);
+    rangeLabelEl.textContent = currentBuckets[0].start.slice(5) + ' \u2013 ' + currentBuckets[6].start.slice(5);
     document.getElementById('weekNext').disabled = weekOffset===0;
+  } else if(activePeriod==='month'){
+    weekNavRow.style.display = 'flex';
+    rangeLabelEl.textContent = '';
+    document.getElementById('weekNext').disabled = monthOffset===0;
+  } else if(activePeriod==='year'){
+    weekNavRow.style.display = 'flex';
+    rangeLabelEl.textContent = '';
+    document.getElementById('weekNext').disabled = yearOffset===0;
   } else {
     weekNavRow.style.display = 'none';
   }
