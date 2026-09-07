@@ -430,6 +430,8 @@ let activePlanType = 'exam';
 let activeBusyDay = 1;
 let trendsChart = null;
 let currentBuckets = [];
+let weekOffset = 0;
+let lastBarIdx = null;
 let punchOffset = 0;
 let avgPeriod = 'day';
 let avgRingChart = null;
@@ -1549,6 +1551,7 @@ function renderTrends(){
       '<button class="period-btn ' + (activePeriod==='year'?'active':'') + '" data-p="year">Year</button>' +
     '</div>' +
     '<div class="stat-hero"><span class="section-label" style="margin:0;" id="trendTitle">This week</span><span class="delta" id="trendDelta"></span></div>' +
+    '<div class="punch-head" id="weekNavRow" style="display:none; margin:-4px 0 4px;"><span></span><div style="display:flex; align-items:center; gap:6px;"><button class="punch-nav" id="weekPrev">&lsaquo;</button><span class="punch-range" id="weekRangeLabel"></span><button class="punch-nav" id="weekNext">&rsaquo;</button></div></div>' +
     '<div class="val" id="trendTotal">0.0h</div>' +
     '<div class="legend-row" id="trendLegend"></div>' +
     '<div class="chart-box"><canvas id="trendsCanvas" role="img" aria-label="Study hours chart"></canvas></div>' +
@@ -1586,8 +1589,10 @@ function renderTrends(){
     '</div>';
 
   document.querySelectorAll('#periodRow .period-btn').forEach(function(btn){
-    btn.addEventListener('click', function(){ activePeriod = btn.dataset.p; renderTrends(); });
+    btn.addEventListener('click', function(){ activePeriod = btn.dataset.p; weekOffset = 0; renderTrends(); });
   });
+  document.getElementById('weekPrev').addEventListener('click', function(){ weekOffset += 1; renderTrendsChart(); });
+  document.getElementById('weekNext').addEventListener('click', function(){ weekOffset = Math.max(0, weekOffset-1); renderTrendsChart(); });
   document.getElementById('saveGoalBtn').addEventListener('click', function(){
     const v = parseInt(document.getElementById('goalInput').value,10);
     if(v && v>0){ state.settings.dailyGoalMin = v; storageSet(STORAGE_KEYS.settings, state.settings); renderTrends(); }
@@ -1697,12 +1702,13 @@ function renderTrendsChart(){
     prevMin = sumForRange(daysAgoStr(1), daysAgoStr(1));
     currentBuckets = state.subjects.map(function(){ return { start: todayStr(), end: todayStr() }; });
   } else if(activePeriod==='week'){
-    title = 'This week';
-    const dayStrs = [6,5,4,3,2,1,0].map(function(n){ return daysAgoStr(n); });
+    const shift = weekOffset*7;
+    const dayStrs = [6,5,4,3,2,1,0].map(function(n){ return daysAgoStr(n+shift); });
+    title = weekOffset===0 ? 'This week' : (new Date(dayStrs[0]).toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' \u2013 ' + new Date(dayStrs[6]).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
     labels = dayStrs.map(function(d){ return new Date(d).toLocaleDateString('en-US',{weekday:'short'}); });
     datasets = buildDatasetsForDays(dayStrs);
-    totalMin = sumForRange(daysAgoStr(6), todayStr());
-    prevMin = sumForRange(daysAgoStr(13), daysAgoStr(7));
+    totalMin = sumForRange(dayStrs[0], dayStrs[6]);
+    prevMin = sumForRange(daysAgoStr(13+shift), daysAgoStr(7+shift));
     currentBuckets = dayStrs.map(function(d){ return { start:d, end:d }; });
   } else if(activePeriod==='month'){
     title = 'This month';
@@ -1747,6 +1753,14 @@ function renderTrendsChart(){
 
   document.getElementById('trendTitle').textContent = title;
   document.getElementById('trendTotal').textContent = minutesToH(totalMin);
+  const weekNavRow = document.getElementById('weekNavRow');
+  if(activePeriod==='week'){
+    weekNavRow.style.display = 'flex';
+    document.getElementById('weekRangeLabel').textContent = currentBuckets[0].start.slice(5) + ' \u2013 ' + currentBuckets[6].start.slice(5);
+    document.getElementById('weekNext').disabled = weekOffset===0;
+  } else {
+    weekNavRow.style.display = 'none';
+  }
   const deltaEl = document.getElementById('trendDelta');
   if(prevMin>0){
     const pctChange = Math.round(((totalMin-prevMin)/prevMin)*100);
@@ -1773,9 +1787,10 @@ function renderTrendsChart(){
   });
 }
 function showBarBreakdown(idx){
+  lastBarIdx = idx;
   const bucket = activePeriod==='day' ? currentBuckets[0] : currentBuckets[idx];
   if(!bucket) return;
-  const label = activePeriod==='day' ? state.subjects[idx].name : trendsChart.data.labels[idx];
+  const label = activePeriod==='day' ? state.subjects[idx].name : (trendsChart ? trendsChart.data.labels[idx] : '');
   const dateSubtitle = (activePeriod==='week' || activePeriod==='day')
     ? new Date(bucket.start).toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'})
     : (bucket.start===bucket.end ? bucket.start : bucket.start + ' \u2013 ' + bucket.end);
@@ -1787,7 +1802,27 @@ function showBarBreakdown(idx){
   if(!totals.length){ el.innerHTML = '<div class="empty-state" style="padding:12px 0;">No sessions in this period.</div>'; return; }
   el.innerHTML = '<div class="breakdown-head" style="display:flex; flex-direction:column; gap:1px;"><div style="display:flex; justify-content:space-between; align-items:center;"><span>' + label + '</span><span class="mono" style="color:var(--text);">' + minutesToH(barTotal) + ' total</span></div><span style="font-size:10.5px; color:var(--text-3); font-family:\'IBM Plex Mono\',monospace;">' + dateSubtitle + '</span></div><ul class="breakdown-list">' + totals.map(function(t){
     return '<li><span class="bd-left"><span class="dot" style="background:'+t.subj.color+'"></span>'+t.subj.name+'</span><span class="mono">'+minutesToH(t.min)+'</span></li>';
+  }).join('') + '</ul>' + (activePeriod==='month' ? '<button class="btn btn-ghost" id="dayWiseBtn" style="width:100%; margin-top:10px; font-size:12px; padding:9px 0;">See day-by-day breakdown</button>' : '');
+
+  if(activePeriod==='month'){
+    document.getElementById('dayWiseBtn').addEventListener('click', function(){ showWeekDayBreakdown(bucket); });
+  }
+}
+function showWeekDayBreakdown(bucket){
+  const el = document.getElementById('barBreakdown');
+  const days = [];
+  let cursor = new Date(bucket.start + 'T00:00:00');
+  const end = new Date(bucket.end + 'T00:00:00');
+  while(cursor<=end){
+    const dateStr = fmtDate(cursor);
+    days.push({ date: dateStr, total: sumForRange(dateStr, dateStr) });
+    cursor.setDate(cursor.getDate()+1);
+  }
+  el.innerHTML = '<button class="btn btn-ghost" id="backToSubjBtn" style="font-size:11px; padding:6px 12px; margin-bottom:10px;">&larr; Back to subjects</button><ul class="breakdown-list">' + days.map(function(d){
+    const label = new Date(d.date + 'T00:00:00').toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'});
+    return '<li><span class="bd-left">' + label + '</span><span class="mono">' + minutesToH(d.total) + '</span></li>';
   }).join('') + '</ul>';
+  document.getElementById('backToSubjBtn').addEventListener('click', function(){ showBarBreakdown(lastBarIdx); });
 }
 
 /* ================= PLAN TAB ================= */
