@@ -41,6 +41,9 @@
     gap:10px;
   }
   .topbar-left{display:flex; align-items:center; gap:10px;}
+  .week-chip{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-2); background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px 12px; margin-bottom:16px;}
+  .week-chip b{color:var(--text); font-weight:500;}
+  .week-chip .delta{font-size:11.5px; font-weight:600; margin-left:auto;}
   .menu-btn{background:var(--surface); border:1px solid var(--border-strong); border-radius:8px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-2); flex:0 0 auto;}
   .menu-btn svg{width:18px; height:18px;}
   .brand{font-family:'Bitter',serif; font-weight:700; font-size:15px; letter-spacing:2px; color:var(--text);}
@@ -382,8 +385,10 @@
     max-width:380px; width:calc(100% - 40px); background:var(--surface-2); border:1px solid var(--accent);
     border-radius:12px; padding:12px 16px; font-size:13px; text-align:center; z-index:90;
     transition:all 0.25s ease; pointer-events:none;
+    display:flex; align-items:center; justify-content:center; gap:12px;
   }
-  .toast.show{opacity:1; transform:translate(-50%, 0);}
+  .toast.show{opacity:1; transform:translate(-50%, 0); pointer-events:auto;}
+  .undo-btn{background:none; border:none; color:var(--accent); font-weight:700; font-size:13px; cursor:pointer; padding:2px 4px; flex:0 0 auto;}
 
   .tabbar{
     position:fixed; bottom:0; left:50%; transform:translateX(-50%);
@@ -520,6 +525,13 @@ function todayStr(){ return fmtDate(new Date()); }
 function daysAgoStr(n){ const d=new Date(); d.setDate(d.getDate()-n); return fmtDate(d); }
 function daysFromNowStr(n){ const d=new Date(); d.setDate(d.getDate()+n); return fmtDate(d); }
 function minutesToH(min){ return (min/60).toFixed(1)+'h'; }
+function isEventUpcoming(e){
+  const todayS = todayStr();
+  if(e.date > todayS) return true;
+  if(e.date < todayS) return false;
+  if(!e.time) return true;
+  return new Date(e.date + 'T' + e.time).getTime() >= Date.now();
+}
 function subjectById(id){ return state.subjects.find(function(s){ return s.id===id; }); }
 function formatElapsed(totalSeconds){
   totalSeconds = Math.max(0, totalSeconds);
@@ -548,10 +560,23 @@ function calcStreak(){
 
 function showToast(msg, ms){
   const t = document.getElementById('toast');
+  t.innerHTML = '';
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(t._hideTimer);
   t._hideTimer = setTimeout(function(){ t.classList.remove('show'); }, ms||3500);
+}
+function showUndoToast(msg, undoFn){
+  const t = document.getElementById('toast');
+  clearTimeout(t._hideTimer);
+  t.innerHTML = '<span>' + msg + '</span><button class="undo-btn" id="undoBtn">Undo</button>';
+  t.classList.add('show');
+  document.getElementById('undoBtn').addEventListener('click', function(){
+    t.classList.remove('show');
+    clearTimeout(t._hideTimer);
+    undoFn();
+  });
+  t._hideTimer = setTimeout(function(){ t.classList.remove('show'); }, 5000);
 }
 
 /* ---------- init with crash-recovery ---------- */
@@ -648,12 +673,14 @@ function buildShell(){
         '<button class="drawer-item" id="drawerTodoBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>To-do list</button>' +
         '<button class="drawer-item" id="drawerAchBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L7 21l5-2.5L17 21l-1.5-8.5"/></svg>Your Achievements</button>' +
         '<button class="drawer-item" id="drawerAvgBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9h-9z"/></svg>Study Averages</button>' +
+        '<button class="drawer-item" id="drawerBackupBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>Backup &amp; Restore</button>' +
       '</div>';
     document.body.appendChild(drawerBackdrop);
     drawerBackdrop.addEventListener('click', closeDrawer);
     document.getElementById('drawerTodoBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('todo'); });
     document.getElementById('drawerAchBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('achievements'); });
     document.getElementById('drawerAvgBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('averages'); });
+    document.getElementById('drawerBackupBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('backup'); });
   }
   if(!document.getElementById('overlayBackdrop')){
     const overlayBackdrop = document.createElement('div');
@@ -674,6 +701,7 @@ function openOverlay(kind, arg){
   if(kind==='achievements') renderAchievementsOverlay();
   if(kind==='averages') renderAveragesOverlay();
   if(kind==='badgeDetail') renderBadgeDetailOverlay(arg);
+  if(kind==='backup') renderBackupOverlay();
 }
 function closeOverlay(){ document.getElementById('overlayBackdrop').classList.remove('open'); }
 
@@ -717,8 +745,20 @@ function renderTrack(){
   const todaySessions = state.sessions.filter(function(s){ return fmtDate(s.start)===todayStr(); });
   const todayTotal = todaySessions.reduce(function(a,s){ return a+s.durationMin; },0);
   const m = state.settings;
+  const thisWeekMin = sumForRange(daysAgoStr(6), todayStr());
+  const lastWeekMin = sumForRange(daysAgoStr(13), daysAgoStr(7));
+  let weekChip = '';
+  if(thisWeekMin>0 || lastWeekMin>0){
+    if(lastWeekMin>0){
+      const pct = Math.round(((thisWeekMin-lastWeekMin)/lastWeekMin)*100);
+      weekChip = '<div class="week-chip">This week <b class="mono">' + minutesToH(thisWeekMin) + '</b><span class="delta ' + (pct>=0?'up':'down') + '">' + (pct>=0?'+':'') + pct + '%</span> vs last week</div>';
+    } else {
+      weekChip = '<div class="week-chip">This week <b class="mono">' + minutesToH(thisWeekMin) + '</b></div>';
+    }
+  }
 
   panel.innerHTML =
+    weekChip +
     '<p class="section-label">Subject</p>' +
     '<div class="chip-row" id="chipRow"></div>' +
 
@@ -825,12 +865,28 @@ function renderModeRow(){
   };
 }
 
+function textColorFor(hex){
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  const luminance = (0.299*r + 0.587*g + 0.114*b)/255;
+  return luminance > 0.55 ? '#1A1409' : '#F5F3EC';
+}
+
 function updateTimerButtons(){
   const startBtn = document.getElementById('startBtn');
   const pauseBtn = document.getElementById('pauseBtn');
   const stopBtn = document.getElementById('stopBtn');
   const hint = document.getElementById('timerHint');
   if(!startBtn) return;
+
+  const subj = subjectById(activeSubjectId);
+  if(subj){
+    startBtn.style.background = subj.color;
+    startBtn.style.color = textColorFor(subj.color);
+  } else {
+    startBtn.style.background = '';
+    startBtn.style.color = '';
+  }
+  updateTimerDisplay();
 
   if(timer.phase === 'idle'){
     startBtn.style.display=''; pauseBtn.style.display='none'; stopBtn.style.display='none';
@@ -867,7 +923,30 @@ function updateTimerDisplay(){
   }
   disp.textContent = formatElapsed(shown);
   arc.setAttribute('stroke-dashoffset', String(circumference*(1-frac)));
+  const subj = subjectById(activeSubjectId);
+  if(subj) arc.setAttribute('stroke', subj.color);
 }
+
+function vibrate(pattern){
+  try{ if(navigator.vibrate) navigator.vibrate(pattern); }catch(e){}
+}
+
+let wakeLockRef = null;
+async function acquireWakeLock(){
+  try{
+    if('wakeLock' in navigator){
+      wakeLockRef = await navigator.wakeLock.request('screen');
+    }
+  }catch(e){ wakeLockRef = null; }
+}
+function releaseWakeLock(){
+  try{ if(wakeLockRef){ wakeLockRef.release(); wakeLockRef = null; } }catch(e){}
+}
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible' && timer.phase==='running' && !wakeLockRef){
+    acquireWakeLock();
+  }
+});
 
 function startTimer(){
   if(!activeSubjectId || timer.phase !== 'idle') return;
@@ -878,6 +957,8 @@ function startTimer(){
   timer.lastTick = Date.now();
   persistActiveTimer();
   playStartSound();
+  vibrate(40);
+  acquireWakeLock();
   updateTimerButtons();
   updateTimerDisplay();
 }
@@ -885,6 +966,8 @@ function pauseTimer(){
   if(timer.phase !== 'running') return;
   timer.phase = 'paused';
   persistActiveTimer();
+  vibrate(25);
+  releaseWakeLock();
   updateTimerButtons();
 }
 function resumeTimer(){
@@ -892,6 +975,8 @@ function resumeTimer(){
   timer.phase = 'running';
   timer.lastTick = Date.now();
   persistActiveTimer();
+  vibrate(25);
+  acquireWakeLock();
   updateTimerButtons();
 }
 function stopTimer(){
@@ -907,6 +992,8 @@ function stopTimer(){
   timer.phase='idle'; timer.elapsedSec=0; timer.targetSec=0; timer.lastTick=null; timer.isBreak=false;
   clearActiveTimer();
   beep(440,220);
+  vibrate([30,40,30]);
+  releaseWakeLock();
   if(logged){ checkLadderProgress(); checkAchievements(); }
   renderAll();
 }
@@ -926,11 +1013,15 @@ function handleTimerComplete(){
     timer.targetSec = timer.isBreak ? state.settings.breakMin*60 : state.settings.focusMin*60;
     timer.phase = 'paused';
     clearActiveTimer();
+    releaseWakeLock();
+    vibrate([30,40,30]);
     if(timer.isBreak){ beepPattern([[880,120],[880,120]]); notifyLocal('Study Log', 'Focus block done \u2014 take a ' + state.settings.breakMin + ' min break.'); }
     else { beepPattern([[660,150]]); notifyLocal('Study Log', 'Break\u2019s over \u2014 tap Resume for the next focus block.'); }
   } else {
     timer.phase='idle'; timer.elapsedSec=0; timer.targetSec=0; timer.lastTick=null;
     clearActiveTimer();
+    releaseWakeLock();
+    vibrate([30,40,30]);
     beepPattern([[660,140],[880,220]]);
     notifyLocal('Study Log', 'Timer complete.');
   }
@@ -1269,6 +1360,96 @@ function renderWeekdayBars(){
   }).join('');
 }
 
+function gatherAllData(){
+  return {
+    exportedAt: new Date().toISOString(),
+    subjects: state.subjects, sessions: state.sessions, settings: state.settings,
+    events: state.events, busyBlocks: state.busyBlocks, todos: state.todos, achievements: state.achievements
+  };
+}
+function downloadFile(filename, content, mime){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+function exportAllDataJson(){
+  downloadFile('study-log-backup-' + todayStr() + '.json', JSON.stringify(gatherAllData(), null, 2), 'application/json');
+}
+function exportSessionsCsv(){
+  const rows = [['Subject','Date','Start','End','Duration (min)']];
+  state.sessions.slice().sort(function(a,b){ return a.start-b.start; }).forEach(function(s){
+    const subj = subjectById(s.subjectId);
+    rows.push([subj?subj.name:'Deleted subject', fmtDate(s.start), fmtTime(s.start), fmtTime(s.end), s.durationMin]);
+  });
+  const csv = rows.map(function(r){ return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
+  downloadFile('study-log-sessions-' + todayStr() + '.csv', csv, 'text/csv');
+}
+function importAllDataJson(jsonStr){
+  try{
+    const data = JSON.parse(jsonStr);
+    if(!data || typeof data !== 'object') return false;
+    if(Array.isArray(data.subjects)) storageSet(STORAGE_KEYS.subjects, data.subjects);
+    if(Array.isArray(data.sessions)) storageSet(STORAGE_KEYS.sessions, data.sessions);
+    if(data.settings) storageSet(STORAGE_KEYS.settings, data.settings);
+    if(Array.isArray(data.events)) storageSet(STORAGE_KEYS.events, data.events);
+    if(Array.isArray(data.busyBlocks)) storageSet(STORAGE_KEYS.busyBlocks, data.busyBlocks);
+    if(Array.isArray(data.todos)) storageSet(STORAGE_KEYS.todos, data.todos);
+    if(data.achievements) storageSet(STORAGE_KEYS.achievements, data.achievements);
+    return true;
+  }catch(e){ return false; }
+}
+function renderBackupOverlay(){
+  const panel = document.getElementById('overlayPanel');
+  panel.innerHTML =
+    '<div class="session-panel-head"><h2>Backup &amp; Restore</h2><button class="panel-close-btn" id="panelCloseBtn2">&times;</button></div>' +
+    '<div class="card"><p class="section-label" style="margin-top:0;">Export</p>' +
+    '<p class="hint" style="text-align:left; margin:0 0 12px;">Save everything \u2014 sessions, subjects, plan, achievements, to-dos \u2014 to a file you can restore later or move to a new phone.</p>' +
+    '<button class="btn btn-primary" id="exportJsonBtn" style="width:100%; margin-bottom:8px;">Export full backup (.json)</button>' +
+    '<button class="btn btn-ghost" id="exportCsvBtn" style="width:100%;">Export sessions only (.csv)</button></div>' +
+
+    '<div class="card"><p class="section-label" style="margin-top:0;">Restore</p>' +
+    '<p class="hint" style="text-align:left; margin:0 0 12px;">Importing a backup file replaces your current data with what\u2019s in the file.</p>' +
+    '<input type="file" accept="application/json" id="importFileInput" style="display:none;">' +
+    '<button class="btn btn-ghost" id="importBtn" style="width:100%;">Choose backup file to restore</button></div>' +
+
+    '<div class="card" style="border-color:var(--danger);"><p class="section-label" style="margin-top:0; color:var(--danger);">Danger zone</p>' +
+    '<p class="hint" style="text-align:left; margin:0 0 12px;">Permanently erases everything on this device. Cannot be undone.</p>' +
+    '<button class="btn btn-danger" id="resetAllBtn" style="width:100%;">Erase all data</button></div>';
+
+  document.getElementById('panelCloseBtn2').addEventListener('click', closeOverlay);
+  document.getElementById('exportJsonBtn').addEventListener('click', exportAllDataJson);
+  document.getElementById('exportCsvBtn').addEventListener('click', exportSessionsCsv);
+  document.getElementById('importBtn').addEventListener('click', function(){ document.getElementById('importFileInput').click(); });
+  document.getElementById('importFileInput').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(){
+      const ok = importAllDataJson(reader.result);
+      if(ok){ location.reload(); }
+      else { showToast('That file doesn\u2019t look like a valid backup.', 4000); }
+    };
+    reader.readAsText(file);
+  });
+  document.getElementById('resetAllBtn').addEventListener('click', function(){
+    const btn = document.getElementById('resetAllBtn');
+    if(btn.dataset.confirming !== '1'){
+      btn.dataset.confirming = '1';
+      btn.textContent = 'Tap again to confirm erase';
+      clearTimeout(btn._confirmTimer);
+      btn._confirmTimer = setTimeout(function(){ btn.dataset.confirming='0'; btn.textContent='Erase all data'; }, 4000);
+      return;
+    }
+    Object.values(STORAGE_KEYS).forEach(function(k){ localStorage.removeItem(k); });
+    location.reload();
+  });
+}
+
 function renderBadgeDetailOverlay(milestone){
 
   const panel = document.getElementById('overlayPanel');
@@ -1328,9 +1509,16 @@ function renderTodoOverlay(){
   });
   panel.querySelectorAll('.del-btn[data-todo]').forEach(function(btn){
     btn.addEventListener('click', function(){
+      const idx = state.todos.findIndex(function(t){ return t.id===btn.dataset.todo; });
+      const removed = state.todos[idx];
       state.todos = state.todos.filter(function(t){ return t.id!==btn.dataset.todo; });
       storageSet(STORAGE_KEYS.todos, state.todos);
       renderTodoOverlay();
+      showUndoToast('Task deleted.', function(){
+        state.todos.splice(idx, 0, removed);
+        storageSet(STORAGE_KEYS.todos, state.todos);
+        renderTodoOverlay();
+      });
     });
   });
 }
@@ -1349,16 +1537,22 @@ function addTodo(){
 function renderInsight(){
   const card = document.getElementById('insightCard');
   const todayS = todayStr(), tomorrowS = daysFromNowStr(1);
-  const urgent = state.events.filter(function(e){ return e.date===todayS || e.date===tomorrowS; })
+  const urgent = state.events.filter(function(e){ return isEventUpcoming(e) && (e.date===todayS || e.date===tomorrowS); })
     .sort(function(a,b){ return a.date<b.date?-1:1; });
 
   let text, isUrgent=false;
   if(urgent.length){
-    const e = urgent[0];
+    const sorted = urgent.slice().sort(function(a,b){
+      if(a.date!==b.date) return a.date<b.date?-1:1;
+      if(!!a.priority !== !!b.priority) return a.priority ? -1 : 1;
+      return (a.type==='exam'?0:1) - (b.type==='exam'?0:1);
+    });
+    const e = sorted[0];
     const subj = subjectById(e.subjectId);
     const when = e.date===todayS ? 'today' : 'tomorrow';
     const timeStr = e.time ? (' at ' + fmtTimeLabel(e.time)) : '';
-    text = (subj?subj.name:'Your') + ' ' + e.type + ' \u201c' + e.title + '\u201d is ' + when + timeStr + '. ' + (e.type==='exam' ? 'Good time to review it.' : 'Make sure it\u2019s done in time.');
+    const moreStr = sorted.length>1 ? (' You also have ' + (sorted.length-1) + ' more coming up \u2014 check the Plan tab.') : '';
+    text = (subj?subj.name:'Your') + ' ' + e.type + ' \u201c' + e.title + '\u201d is ' + when + timeStr + '. ' + (e.type==='exam' ? 'Good time to review it.' : 'Make sure it\u2019s done in time.') + moreStr;
     isUrgent = true;
   } else {
     const todayMin = state.sessions.filter(function(s){ return fmtDate(s.start)===todayStr(); }).reduce(function(a,s){ return a+s.durationMin; },0);
@@ -1405,7 +1599,8 @@ function setupQuickQuestions(){
     { q:'What\u2019s my best day ever?', a: shrutiBestDayAnswer },
     { q:'Am I neglecting a subject?', a: shrutiNeglectAnswer },
     { q:'How consistent have I been?', a: shrutiConsistencyAnswer },
-    { q:'Build me a routine', a: null, routine: true }
+    { q:'Build me a routine', a: null, routine: true },
+    { q:'Plan my whole day', a: shrutiBuildFullDayRoutine }
   ];
   row.innerHTML = questions.map(function(item,i){ return '<button class="quick-q" data-i="' + i + '">' + item.q + '</button>'; }).join('');
   row.querySelectorAll('.quick-q').forEach(function(b){
@@ -1449,7 +1644,7 @@ function suggestedStudyMinutesToday(){
 }
 function shrutiTodayAnswer(){
   const todayS = todayStr(), tomorrowS = daysFromNowStr(1);
-  const urgent = state.events.filter(function(e){ return e.date===todayS || e.date===tomorrowS; });
+  const urgent = state.events.filter(function(e){ return isEventUpcoming(e) && (e.date===todayS || e.date===tomorrowS); });
   if(urgent.length){
     const subj = subjectById(urgent[0].subjectId);
     return 'Prioritize ' + (subj?subj.name:'that subject') + ' \u2014 you have a ' + urgent[0].type + ' due ' + (urgent[0].date===todayS?'today':'tomorrow') + '.';
@@ -1462,7 +1657,7 @@ function shrutiTodayAnswer(){
   return least ? (least.name + ' has had the least attention this week \u2014 good one to pick up today.') : 'Add a subject first, then I can point you somewhere.';
 }
 function shrutiUpcomingAnswer(){
-  const upcoming = state.events.filter(function(e){ return e.date>=todayStr(); }).sort(function(a,b){ return a.date<b.date?-1:1; }).slice(0,3);
+  const upcoming = state.events.filter(isEventUpcoming).sort(function(a,b){ return a.date<b.date?-1:1; }).slice(0,3);
   if(!upcoming.length) return 'Nothing logged yet \u2014 add an exam or homework entry in the Plan tab.';
   return upcoming.map(function(e){
     const subj = subjectById(e.subjectId);
@@ -1507,8 +1702,11 @@ function shrutiBuildRoutine(availableMin){
   const todayS = todayStr(), tomorrowS = daysFromNowStr(1);
   let remaining = availableMin;
   const lines = [];
-  const urgent = state.events.filter(function(e){ return e.date===todayS || e.date===tomorrowS; })
-    .sort(function(a,b){ return (a.type==='exam'?0:1) - (b.type==='exam'?0:1); });
+  const urgent = state.events.filter(function(e){ return isEventUpcoming(e) && (e.date===todayS || e.date===tomorrowS); })
+    .sort(function(a,b){
+      if(!!a.priority !== !!b.priority) return a.priority ? -1 : 1;
+      return (a.type==='exam'?0:1) - (b.type==='exam'?0:1);
+    });
   urgent.forEach(function(e){
     if(remaining<=15) return;
     const subj = subjectById(e.subjectId);
@@ -1533,6 +1731,81 @@ function shrutiBuildRoutine(availableMin){
     i++;
   }
   if(!lines.length) return 'Not enough time to build a routine \u2014 try a larger window.';
+  return lines.join('\n');
+}
+function timeToMinutes(t){ const p=t.split(':'); return parseInt(p[0],10)*60+parseInt(p[1],10); }
+function minutesToTimeLabel(mins){
+  mins = ((mins%1440)+1440)%1440;
+  let h = Math.floor(mins/60), m = mins%60;
+  const ap = h>=12?'pm':'am'; let h12=h%12; if(h12===0) h12=12;
+  return h12+':'+pad(m)+ap;
+}
+function shrutiBuildFullDayRoutine(){
+  const todayS = todayStr(), tomorrowS = daysFromNowStr(1);
+  const weekday = new Date().getDay();
+  const winStart = timeToMinutes(state.settings.studyWindowStart);
+  const winEnd = timeToMinutes(state.settings.studyWindowEnd);
+  if(winEnd<=winStart) return 'Your study window in the Plan tab doesn\u2019t leave any usable time \u2014 check the start/end times there.';
+
+  const busyToday = state.busyBlocks.filter(function(b){ return b.day===weekday; })
+    .map(function(b){ return { start: Math.max(winStart, timeToMinutes(b.start)), end: Math.min(winEnd, timeToMinutes(b.end)), label: b.label }; })
+    .filter(function(b){ return b.end>b.start; })
+    .sort(function(a,b){ return a.start-b.start; });
+
+  const timeline = [];
+  let cursor = winStart;
+  busyToday.forEach(function(b){
+    if(b.start>cursor) timeline.push({ type:'free', start:cursor, end:b.start });
+    timeline.push({ type:'busy', start:b.start, end:b.end, label:b.label });
+    cursor = Math.max(cursor, b.end);
+  });
+  if(cursor<winEnd) timeline.push({ type:'free', start:cursor, end:winEnd });
+
+  const urgentItems = state.events.filter(function(e){ return isEventUpcoming(e) && (e.date===todayS || e.date===tomorrowS); })
+    .sort(function(a,b){
+      if(!!a.priority !== !!b.priority) return a.priority ? -1 : 1;
+      return (a.type==='exam'?0:1) - (b.type==='exam'?0:1);
+    });
+
+  const totals = {};
+  state.subjects.forEach(function(s){ totals[s.id]=0; });
+  state.sessions.filter(function(s){ return fmtDate(s.start)>=daysAgoStr(6); }).forEach(function(s){ if(totals[s.subjectId]!=null) totals[s.subjectId]+=s.durationMin; });
+  const ranked = state.subjects.slice().sort(function(a,b){ return totals[a.id]-totals[b.id]; });
+
+  let itemIdx = 0, subjIdx = 0;
+  const lines = [];
+  let anyFreeTime = false;
+  timeline.forEach(function(seg){
+    if(seg.type==='busy'){
+      lines.push(minutesToTimeLabel(seg.start) + ' \u2013 ' + minutesToTimeLabel(seg.end) + ' \u2014 ' + seg.label);
+      return;
+    }
+    anyFreeTime = true;
+    let t = seg.start;
+    let guard = 0;
+    while(t < seg.end - 10 && guard < 30){
+      guard++;
+      if(itemIdx < urgentItems.length){
+        const e = urgentItems[itemIdx];
+        const subj = subjectById(e.subjectId);
+        const block = Math.min(e.estMin||45, seg.end-t);
+        lines.push(minutesToTimeLabel(t) + ' \u2013 ' + minutesToTimeLabel(t+block) + ' \u2014 ' + (subj?subj.name:'') + ': ' + e.title + ' (' + e.type + ')');
+        t += block; itemIdx++;
+      } else if(ranked.length){
+        const subj = ranked[subjIdx % ranked.length];
+        const block = Math.min(40, seg.end-t);
+        lines.push(minutesToTimeLabel(t) + ' \u2013 ' + minutesToTimeLabel(t+block) + ' \u2014 ' + subj.name);
+        t += block; subjIdx++;
+      } else { break; }
+      if(t < seg.end - 10){
+        const brk = Math.min(10, seg.end-t);
+        lines.push(minutesToTimeLabel(t) + ' \u2013 ' + minutesToTimeLabel(t+brk) + ' \u2014 Break');
+        t += brk;
+      }
+    }
+  });
+  if(!anyFreeTime) return 'Your whole study window today is booked with tuition/busy time \u2014 nothing free to schedule.';
+  if(!lines.length) return 'Not enough free time in today\u2019s window to build a routine.';
   return lines.join('\n');
 }
 
@@ -1869,7 +2142,11 @@ function busyMinutesForDate(dateObj){
 }
 function renderPlan(){
   const panel = document.getElementById('panel-plan');
-  const upcoming = state.events.filter(function(e){ return e.date>=todayStr(); }).sort(function(a,b){ return a.date<b.date?-1:1; });
+  const upcoming = state.events.filter(isEventUpcoming).sort(function(a,b){
+    if(a.date!==b.date) return a.date<b.date?-1:1;
+    if(!!a.priority !== !!b.priority) return a.priority ? -1 : 1;
+    return 0;
+  });
   const suggested = suggestedStudyMinutesToday();
 
   panel.innerHTML =
@@ -1884,8 +2161,8 @@ function renderPlan(){
       const timeStr = e.time ? (' \u00b7 ' + fmtTimeLabel(e.time)) : '';
       const estStr = e.estMin ? (' \u00b7 ~' + e.estMin + ' min') : '';
       return '<div class="plan-entry" style="--entry-color:' + (subj?subj.color:'#888') + '">' +
-        '<div class="plan-entry-info"><div class="title">' + e.title + '</div><div class="meta">' + (subj?subj.name:'') + ' &middot; ' + when + timeStr + estStr + '</div></div>' +
-        '<div style="display:flex; align-items:center; gap:8px;"><span class="plan-badge ' + e.type + '">' + e.type + '</span><button class="del-btn" data-id="' + e.id + '">&times;</button></div>' +
+        '<div class="plan-entry-info"><div class="title">' + (e.priority?'\u2b50 ':'') + e.title + '</div><div class="meta">' + (subj?subj.name:'') + ' &middot; ' + when + timeStr + estStr + '</div></div>' +
+        '<div style="display:flex; align-items:center; gap:6px;"><button class="star-btn" data-star="' + e.id + '" aria-label="Mark priority" style="background:none; border:none; font-size:16px; padding:4px; cursor:pointer; opacity:' + (e.priority?'1':'0.35') + ';">\u2b50</button><span class="plan-badge ' + e.type + '">' + e.type + '</span><button class="del-btn" data-id="' + e.id + '">&times;</button></div>' +
       '</div>';
     }).join('') : '<div class="empty-state">Nothing coming up. Add an exam or homework entry below.</div>') +
 
@@ -1924,9 +2201,22 @@ function renderPlan(){
 
   document.querySelectorAll('.del-btn[data-id]').forEach(function(btn){
     btn.addEventListener('click', function(){
+      const idx = state.events.findIndex(function(e){ return e.id === btn.dataset.id; });
+      const removed = state.events[idx];
       state.events = state.events.filter(function(e){ return e.id !== btn.dataset.id; });
       storageSet(STORAGE_KEYS.events, state.events);
       renderPlan();
+      showUndoToast((removed.title||'Entry') + ' deleted.', function(){
+        state.events.splice(idx, 0, removed);
+        storageSet(STORAGE_KEYS.events, state.events);
+        renderPlan();
+      });
+    });
+  });
+  document.querySelectorAll('.star-btn[data-star]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const e = state.events.find(function(x){ return x.id===btn.dataset.star; });
+      if(e){ e.priority = !e.priority; storageSet(STORAGE_KEYS.events, state.events); renderPlan(); }
     });
   });
   document.querySelectorAll('#typeRow .type-btn').forEach(function(btn){
@@ -1946,7 +2236,7 @@ function renderPlan(){
     const estMin = parseInt(document.getElementById('planEstInput').value,10) || null;
     const subjectId = document.getElementById('planSubjSelect').value;
     if(!title || !date) return;
-    state.events.push({ id:'ev'+Date.now(), subjectId, type: activePlanType, title, date, time: time||null, estMin: estMin });
+    state.events.push({ id:'ev'+Date.now(), subjectId, type: activePlanType, title, date, time: time||null, estMin: estMin, priority: false });
     storageSet(STORAGE_KEYS.events, state.events);
     document.getElementById('planTitleInput').value='';
     document.getElementById('planDateInput').value='';
@@ -2006,7 +2296,7 @@ function maybeNotifyUpcoming(){
   if(!state.settings.notifyEnabled) return;
   if(!('Notification' in window) || Notification.permission !== 'granted') return;
   const todayS = todayStr(), tomorrowS = daysFromNowStr(1);
-  state.events.filter(function(e){ return e.date===todayS || e.date===tomorrowS; }).forEach(function(e){
+  state.events.filter(function(e){ return isEventUpcoming(e) && (e.date===todayS || e.date===tomorrowS); }).forEach(function(e){
     const key = 'notified_'+e.id+'_'+e.date;
     if(localStorage.getItem(key)) return;
     const subj = subjectById(e.subjectId);
@@ -2069,6 +2359,15 @@ function renderSessionPanel(){
   panel.innerHTML =
     '<div class="session-panel-head"><h2>Session history</h2><button class="panel-close-btn" id="panelCloseBtn">&times;</button></div>' +
     '<div class="log-filter-row"><input type="date" id="logDateFilterInput" value="' + (logDateFilter||'') + '"><button class="btn btn-ghost" id="logResetBtn" style="font-size:12px; padding:9px 14px;">Reset</button></div>' +
+    '<button class="btn btn-ghost" id="toggleManualEntry" style="font-size:12px; padding:8px 14px; margin-bottom:14px;">+ Add manually</button>' +
+    '<div class="add-plan-form" id="manualEntryForm">' +
+      '<select id="manualSubjSelect">' + state.subjects.map(function(s){ return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('') + '</select>' +
+      '<div class="field-row">' +
+        '<div><div class="field-label">Date</div><input type="date" id="manualDateInput" value="' + todayStr() + '"></div>' +
+        '<div><div class="field-label">Minutes</div><input type="number" id="manualMinInput" min="1" step="1" placeholder="e.g. 30"></div>' +
+      '</div>' +
+      '<button class="btn btn-primary" id="manualAddBtn" style="font-size:13px;">Add session</button>' +
+    '</div>' +
     buildSessionListHtml();
 
   document.getElementById('panelCloseBtn').addEventListener('click', closeSessionPanel);
@@ -2080,12 +2379,38 @@ function renderSessionPanel(){
     logDateFilter = null;
     renderSessionPanel();
   });
+  document.getElementById('toggleManualEntry').addEventListener('click', function(){
+    document.getElementById('manualEntryForm').classList.toggle('open');
+  });
+  document.getElementById('manualAddBtn').addEventListener('click', function(){
+    const subjectId = document.getElementById('manualSubjSelect').value;
+    const date = document.getElementById('manualDateInput').value;
+    const mins = parseInt(document.getElementById('manualMinInput').value, 10);
+    if(!subjectId || !date || !mins || mins<1) return;
+    const start = new Date(date + 'T12:00:00').getTime();
+    const end = start + mins*60000;
+    state.sessions.push({ id:'s'+Date.now(), subjectId, start, end, durationMin: mins });
+    storageSet(STORAGE_KEYS.sessions, state.sessions);
+    checkLadderProgress();
+    checkAchievements();
+    renderAll();
+    renderSessionPanel();
+  });
   panel.querySelectorAll('.del-btn[data-id]').forEach(function(btn){
     btn.addEventListener('click', function(){
+      const idx = state.sessions.findIndex(function(s){ return s.id===btn.dataset.id; });
+      const removed = state.sessions[idx];
       state.sessions = state.sessions.filter(function(s){ return s.id!==btn.dataset.id; });
       storageSet(STORAGE_KEYS.sessions, state.sessions);
       renderAll();
       renderSessionPanel();
+      showUndoToast('Session deleted.', function(){
+        state.sessions.splice(idx, 0, removed);
+        storageSet(STORAGE_KEYS.sessions, state.sessions);
+        renderAll();
+        if(!document.getElementById('sessionPanelBackdrop').classList.contains('open')) return;
+        renderSessionPanel();
+      });
     });
   });
 }
@@ -2122,10 +2447,35 @@ function renderLog(){
   subjList.querySelectorAll('.del-btn[data-subj]').forEach(function(btn){
     btn.addEventListener('click', function(){
       const id = btn.dataset.subj;
+      const hasHistory = state.sessions.some(function(s){ return s.subjectId===id; });
+      if(hasHistory && btn.dataset.confirming !== '1'){
+        btn.dataset.confirming = '1';
+        const original = btn.textContent;
+        btn.textContent = 'Confirm?';
+        btn.style.color = 'var(--danger)';
+        btn.style.fontSize = '11px';
+        clearTimeout(btn._confirmTimer);
+        btn._confirmTimer = setTimeout(function(){
+          btn.dataset.confirming = '0';
+          btn.textContent = original;
+          btn.style.color = '';
+          btn.style.fontSize = '';
+        }, 3000);
+        return;
+      }
+      clearTimeout(btn._confirmTimer);
+      const subj = subjectById(id);
+      const idx = state.subjects.findIndex(function(s){ return s.id===id; });
+      const removed = state.subjects[idx];
       state.subjects = state.subjects.filter(function(s){ return s.id!==id; });
       storageSet(STORAGE_KEYS.subjects, state.subjects);
       if(activeSubjectId===id) activeSubjectId = state.subjects[0] ? state.subjects[0].id : null;
       renderAll();
+      showUndoToast((subj?subj.name:'Subject') + ' deleted.', function(){
+        state.subjects.splice(idx, 0, removed);
+        storageSet(STORAGE_KEYS.subjects, state.subjects);
+        renderAll();
+      });
     });
   });
 
