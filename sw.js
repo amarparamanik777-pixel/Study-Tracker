@@ -1,4 +1,4 @@
-const CACHE = 'study-log-v11';
+const CACHE = 'study-log-v12';
 const ASSETS = [
   './', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './sound-start.mp3',
   './badge-6h.jpg', './badge-7h.jpg', './badge-8h.jpg', './badge-9h.jpg', './badge-10h.jpg', './badge-12h.jpg',
