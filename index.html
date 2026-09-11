@@ -723,6 +723,7 @@ function openOverlay(kind, arg){
   if(kind==='achievements') renderAchievementsOverlay();
   if(kind==='averages') renderAveragesOverlay();
   if(kind==='badgeDetail') renderBadgeDetailOverlay(arg);
+  if(kind==='dailyBadgeDetail') renderDailyBadgeDetailOverlay(arg);
   if(kind==='backup') renderBackupOverlay();
 }
 function closeOverlay(){ document.getElementById('overlayBackdrop').classList.remove('open'); }
@@ -1131,6 +1132,13 @@ function periodDenominator(period){
   return yearsElapsedSinceFirst();
 }
 /* exact distinct-study-days count at the moment each total-hour milestone was first reached */
+function daysReachingThreshold(hoursThreshold){
+  const byDay = {};
+  state.sessions.forEach(function(s){ const d=fmtDate(s.start); byDay[d]=(byDay[d]||0)+s.durationMin; });
+  return Object.entries(byDay).filter(function(e){ return e[1] >= hoursThreshold*60; })
+    .map(function(e){ return { date:e[0], min:e[1] }; })
+    .sort(function(a,b){ return b.date<a.date?-1:1; });
+}
 function computeDaysToMilestones(){
   const sorted = state.sessions.slice().sort(function(a,b){ return a.start-b.start; });
   let cumMin = 0;
@@ -1237,16 +1245,21 @@ function renderAchievementsOverlay(){
     }).join('') + '</div>' +
 
     '<p class="section-label" style="margin-top:22px;">Daily study day achievements</p>' +
+    '<p class="tap-hint" style="margin-top:-4px;">Tap a badge to see which days it counts</p>' +
     '<div class="badge-grid">' + DAILY_HOUR_MILESTONES.map(function(m){
-      const unlocked = state.achievements.daily[m];
-      return '<div class="badge img-badge ' + (unlocked?'unlocked':'') + '">' +
+      const qualifyingDays = daysReachingThreshold(m);
+      const unlocked = qualifyingDays.length > 0;
+      return '<div class="badge img-badge ' + (unlocked?'unlocked clickable':'') + '" data-daily="' + m + '">' +
         '<img src="badge-' + m + 'h.jpg" alt="' + m + '+ hour day badge" style="width:100%; border-radius:10px;' + (unlocked?'':' filter:grayscale(1); opacity:0.35;') + '">' +
-        (unlocked ? '<div class="badge-date">' + unlocked + '</div>' : '') +
+        (unlocked ? '<div class="badge-date">' + qualifyingDays.length + ' day' + (qualifyingDays.length===1?'':'s') + '</div>' : '') +
       '</div>';
     }).join('') + '</div>';
 
   document.getElementById('panelCloseBtn2').addEventListener('click', closeOverlay);
-  panel.querySelectorAll('.badge.clickable').forEach(function(b){
+  panel.querySelectorAll('.badge.clickable[data-daily]').forEach(function(b){
+    b.addEventListener('click', function(){ openOverlay('dailyBadgeDetail', parseInt(b.dataset.daily,10)); });
+  });
+  panel.querySelectorAll('.badge.clickable[data-milestone]').forEach(function(b){
     b.addEventListener('click', function(){ openOverlay('badgeDetail', parseInt(b.dataset.milestone,10)); });
   });
 }
@@ -1503,6 +1516,37 @@ function renderBadgeDetailOverlay(milestone){
     head.addEventListener('click', function(){
       const date = head.dataset.date;
       const detail = document.getElementById('detail-'+date);
+      const arrow = head.querySelector('.day-row-arrow');
+      detail.classList.toggle('open');
+      arrow.classList.toggle('open');
+    });
+  });
+}
+
+function renderDailyBadgeDetailOverlay(hoursThreshold){
+  const panel = document.getElementById('overlayPanel');
+  const days = daysReachingThreshold(hoursThreshold);
+
+  panel.innerHTML =
+    '<div class="session-panel-head"><h2>' + hoursThreshold + '+ Hour Days</h2><button class="panel-close-btn" id="panelCloseBtn2">&times;</button></div>' +
+    '<p class="hint" style="text-align:left; margin:0 0 16px;">' + (days.length ? (days.length + ' day' + (days.length===1?'':'s') + ' where you studied ' + hoursThreshold + '+ hours.') : 'No days yet \u2014 keep going.') + (days.length ? ' Tap any date to see the subject breakdown.' : '') + '</p>' +
+    '<div id="dailyBadgeDayList">' + days.map(function(d){
+      const label = d.date===todayStr() ? 'Today' : new Date(d.date+'T00:00:00').toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'});
+      const sessionsForDay = state.sessions.filter(function(s){ return fmtDate(s.start)===d.date; });
+      const bySubj = {};
+      sessionsForDay.forEach(function(s){ bySubj[s.subjectId]=(bySubj[s.subjectId]||0)+s.durationMin; });
+      const subjRows = Object.entries(bySubj).sort(function(a,b){ return b[1]-a[1]; }).map(function(entry){
+        const subj = subjectById(entry[0]);
+        return '<li><span class="bd-left"><span class="dot" style="background:'+(subj?subj.color:'#888')+'"></span>'+(subj?subj.name:'Deleted subject')+'</span><span class="mono">'+minutesToH(entry[1])+'</span></li>';
+      }).join('');
+      return '<div class="day-row"><div class="day-row-head" data-date="' + d.date + '"><span class="drh-date">' + label + '</span><span class="drh-right">' + minutesToH(d.min) + '<span class="day-row-arrow">\u25be</span></span></div><div class="day-row-detail" id="daily-detail-' + d.date + '"><ul class="breakdown-list">' + subjRows + '</ul></div></div>';
+    }).join('') + '</div>';
+
+  document.getElementById('panelCloseBtn2').addEventListener('click', closeOverlay);
+  panel.querySelectorAll('.day-row-head').forEach(function(head){
+    head.addEventListener('click', function(){
+      const date = head.dataset.date;
+      const detail = document.getElementById('daily-detail-'+date);
       const arrow = head.querySelector('.day-row-arrow');
       detail.classList.toggle('open');
       arrow.classList.toggle('open');
