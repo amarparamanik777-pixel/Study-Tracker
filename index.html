@@ -150,6 +150,24 @@
   .ach-popup-sub{font-size:13px; color:var(--accent); text-transform:uppercase; letter-spacing:1px; margin-top:6px; font-weight:600;}
   .ach-popup-msg{font-size:12.5px; color:var(--text-2); margin-top:14px; line-height:1.5;}
 
+  /* daily goals grid */
+  .goal-set-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 0; border-bottom:1px solid var(--border); font-size:12.5px;}
+  .goal-set-row .gs-left{display:flex; align-items:center; gap:8px;}
+  .goal-set-row .dot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
+  .goal-set-row input{width:64px; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text); border-radius:6px; padding:6px 7px; font-family:'IBM Plex Mono',monospace; font-size:12px; text-align:center;}
+  .goalgrid-wrap{overflow-x:auto; margin:10px 0 4px; -webkit-overflow-scrolling:touch;}
+  .goalgrid{border-collapse:collapse; font-size:10.5px;}
+  .goalgrid th, .goalgrid td{padding:5px 4px; text-align:center; min-width:24px;}
+  .goalgrid thead th{color:var(--text-3); font-weight:500; font-family:'IBM Plex Mono',monospace; font-size:9px; line-height:1.4;}
+  .goalgrid .subj-cell{position:sticky; left:0; background:var(--bg); text-align:left; padding-right:10px; white-space:nowrap; font-size:11.5px; z-index:2;}
+  .goalgrid .subj-cell .dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px;}
+  .goal-check{width:16px; height:16px; border-radius:4px; border:1px solid var(--border-strong); background:var(--surface-2); display:inline-flex; align-items:center; justify-content:center; font-size:10px; color:var(--success); margin:0 auto;}
+  .goal-check.met{background:var(--success-dim); border-color:var(--success); color:var(--success);}
+  .analysis-head-row{display:grid; grid-template-columns:1.5fr 0.7fr 0.6fr 1fr; gap:8px; font-size:10.5px; color:var(--text-3); padding-bottom:8px; border-bottom:1px solid var(--border-strong);}
+  .analysis-row{display:grid; grid-template-columns:1.5fr 0.7fr 0.6fr 1fr; gap:8px; align-items:center; padding:9px 0; border-bottom:1px solid var(--border); font-size:12px;}
+  .analysis-row .a-bar-track{background:var(--surface-3); border-radius:4px; height:6px; overflow:hidden;}
+  .analysis-row .a-bar-fill{background:var(--accent); height:100%;}
+
   /* averages */
   .ring-chart-wrap{position:relative; width:220px; height:220px; margin:10px auto 16px;}
   .ring-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; pointer-events:none;}
@@ -194,6 +212,13 @@
   .chip.active{border-color:var(--dot-color, var(--accent)); color:var(--text); background:var(--surface-2);}
   .chip.add-chip{color:var(--accent); border-style:dashed;}
 
+  .trends-top-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
+  .icon-toggle-btn{background:var(--surface); border:1px solid var(--border-strong); border-radius:8px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-2); flex:0 0 auto;}
+  .icon-toggle-btn svg{width:16px; height:16px;}
+  .trends-subj-select{
+    background:var(--surface); border:1px solid var(--border-strong); color:var(--text); border-radius:8px;
+    padding:7px 10px; font-family:'Inter'; font-size:12.5px; max-width:150px;
+  }
   .period-row{display:flex; gap:4px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:3px; margin-bottom:14px;}
   .period-btn{flex:1; border:none; background:transparent; color:var(--text-2); font-size:12.5px; padding:8px 0; border-radius:6px; cursor:pointer; font-family:'Inter';}
   .period-btn.active{background:var(--accent); color:#1A1409; font-weight:600;}
@@ -463,6 +488,9 @@ let yearOffset = 0;
 let lastBarIdx = null;
 let punchOffset = 0;
 let avgPeriod = 'day';
+let goalMonthOffset = 0;
+let chartTypeMode = 'bar';
+let trendsSubjectFilter = 'all';
 let avgRingChart = null;
 let sessionRingChart = null;
 let compareSortMode = 'new-old';
@@ -476,7 +504,7 @@ function storageGet(key, fallback){
 }
 function storageSet(key, value){
   try{ localStorage.setItem(key, JSON.stringify(value)); return true; }
-  catch(e){ console.error('save failed', key, e); return false; }
+  catch(e){ console.error('save failed', key, e); try{ showToast('Could not save \u2014 device storage may be full.', 5000); }catch(_){} return false; }
 }
 
 /* ---------- sound ---------- */
@@ -541,6 +569,11 @@ setInterval(function(){
 }, 1000);
 
 function pad(n){ return String(n).padStart(2,'0'); }
+function esc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function parseLocalDate(s){
+  if(typeof s==='string' && /^\d{4}-\d{2}-\d{2}$/.test(s)){ const p=s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); }
+  return new Date(s);
+}
 function fmtDate(d){ const x=new Date(d); return x.getFullYear()+'-'+pad(x.getMonth()+1)+'-'+pad(x.getDate()); }
 function fmtTime(d){ const x=new Date(d); let h=x.getHours(); const m=pad(x.getMinutes()); const ap=h>=12?'pm':'am'; h=h%12; if(h===0)h=12; return h+':'+m+ap; }
 function todayStr(){ return fmtDate(new Date()); }
@@ -695,6 +728,7 @@ function buildShell(){
         '<button class="drawer-item" id="drawerTodoBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>To-do list</button>' +
         '<button class="drawer-item" id="drawerAchBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L7 21l5-2.5L17 21l-1.5-8.5"/></svg>Your Achievements</button>' +
         '<button class="drawer-item" id="drawerAvgBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9h-9z"/></svg>Study Averages</button>' +
+        '<button class="drawer-item" id="drawerGoalsBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 12l2 2 4-4"/></svg>Daily Goals</button>' +
         '<button class="drawer-item" id="drawerBackupBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>Backup &amp; Restore</button>' +
       '</div>';
     document.body.appendChild(drawerBackdrop);
@@ -702,6 +736,7 @@ function buildShell(){
     document.getElementById('drawerTodoBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('todo'); });
     document.getElementById('drawerAchBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('achievements'); });
     document.getElementById('drawerAvgBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('averages'); });
+    document.getElementById('drawerGoalsBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('goals'); });
     document.getElementById('drawerBackupBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('backup'); });
   }
   if(!document.getElementById('overlayBackdrop')){
@@ -724,6 +759,7 @@ function openOverlay(kind, arg){
   if(kind==='averages') renderAveragesOverlay();
   if(kind==='badgeDetail') renderBadgeDetailOverlay(arg);
   if(kind==='dailyBadgeDetail') renderDailyBadgeDetailOverlay(arg);
+  if(kind==='goals') renderGoalsOverlay();
   if(kind==='backup') renderBackupOverlay();
 }
 function closeOverlay(){ document.getElementById('overlayBackdrop').classList.remove('open'); }
@@ -746,6 +782,7 @@ function updateBellBadge(){
 
 function switchTab(tab){
   activeTab = tab;
+  if(tab !== 'trends'){ chartTypeMode = 'bar'; trendsSubjectFilter = 'all'; }
   ['track','trends','plan','log'].forEach(function(t){
     document.getElementById('panel-'+t).hidden = t!==tab;
   });
@@ -835,7 +872,7 @@ function renderTrack(){
   }else{
     list.innerHTML = todaySessions.slice().reverse().map(function(s){
       const subj = subjectById(s.subjectId);
-      return '<li><span class="sess-left"><span class="dot" style="background:' + (subj?subj.color:'#888') + '"></span>' + (subj?subj.name:'Deleted subject') + '</span><span class="sess-dur">' + s.durationMin + 'm</span></li>';
+      return '<li><span class="sess-left"><span class="dot" style="background:' + (subj?subj.color:'#888') + '"></span>' + (subj?esc(subj.name):'Deleted subject') + '</span><span class="sess-dur">' + s.durationMin + 'm</span></li>';
     }).join('');
   }
 
@@ -846,7 +883,7 @@ function renderTrack(){
 function renderChips(){
   const row = document.getElementById('chipRow');
   row.innerHTML = state.subjects.map(function(s){
-    return '<button class="chip ' + (s.id===activeSubjectId?'active':'') + '" style="--dot-color:' + s.color + '" data-id="' + s.id + '"><span class="dot" style="background:' + s.color + '"></span>' + s.name + '</button>';
+    return '<button class="chip ' + (s.id===activeSubjectId?'active':'') + '" style="--dot-color:' + s.color + '" data-id="' + s.id + '"><span class="dot" style="background:' + s.color + '"></span>' + esc(s.name) + '</button>';
   }).join('') + '<button class="chip add-chip" id="addSubjChip">+ Add</button>';
 
   row.querySelectorAll('.chip[data-id]').forEach(function(chip){
@@ -959,6 +996,7 @@ async function acquireWakeLock(){
   try{
     if('wakeLock' in navigator){
       wakeLockRef = await navigator.wakeLock.request('screen');
+      wakeLockRef.addEventListener('release', function(){ wakeLockRef = null; });
     }
   }catch(e){ wakeLockRef = null; }
 }
@@ -1035,7 +1073,7 @@ function handleTimerComplete(){
     timer.elapsedSec = 0;
     timer.targetSec = timer.isBreak ? state.settings.breakMin*60 : state.settings.focusMin*60;
     timer.phase = 'paused';
-    clearActiveTimer();
+    persistActiveTimer();
     releaseWakeLock();
     vibrate([30,40,30]);
     if(timer.isBreak){ beepPattern([[880,120],[880,120]]); notifyLocal('Study Log', 'Focus block done \u2014 take a ' + state.settings.breakMin + ' min break.'); }
@@ -1099,26 +1137,26 @@ function firstSessionDate(){
 function daysElapsedSinceFirst(){
   const first = firstSessionDate();
   if(!first) return 1;
-  return Math.max(1, Math.round((new Date(todayStr()) - new Date(first))/86400000)+1);
+  return Math.max(1, Math.round((parseLocalDate(todayStr()) - parseLocalDate(first))/86400000)+1);
 }
 function weeksElapsedSinceFirst(){ return Math.max(1, Math.ceil(daysElapsedSinceFirst()/7)); }
 function monthsElapsedSinceFirst(){
   const first = firstSessionDate();
   if(!first) return 1;
-  const f = new Date(first), n = new Date(todayStr());
+  const f = parseLocalDate(first), n = parseLocalDate(todayStr());
   return Math.max(1, (n.getFullYear()-f.getFullYear())*12 + (n.getMonth()-f.getMonth()) + 1);
 }
 function yearsElapsedSinceFirst(){
   const first = firstSessionDate();
   if(!first) return 1;
-  return Math.max(1, new Date(todayStr()).getFullYear() - new Date(first).getFullYear() + 1);
+  return Math.max(1, parseLocalDate(todayStr()).getFullYear() - parseLocalDate(first).getFullYear() + 1);
 }
 function weekdayOccurrencesSinceFirst(weekdayIdx){
   const first = firstSessionDate();
   if(!first) return 1;
   let count=0;
-  let cursor = new Date(first);
-  const end = new Date(todayStr());
+  let cursor = parseLocalDate(first);
+  const end = parseLocalDate(todayStr());
   while(cursor<=end){
     if(cursor.getDay()===weekdayIdx) count++;
     cursor.setDate(cursor.getDate()+1);
@@ -1250,7 +1288,7 @@ function renderAchievementsOverlay(){
       const qualifyingDays = daysReachingThreshold(m);
       const unlocked = qualifyingDays.length > 0;
       return '<div class="badge img-badge ' + (unlocked?'unlocked clickable':'') + '" data-daily="' + m + '">' +
-        '<img src="badge-' + m + 'h.jpg" alt="' + m + '+ hour day badge" style="width:100%; border-radius:10px;' + (unlocked?'':' filter:grayscale(1); opacity:0.35;') + '">' +
+        '<img src="badge-' + m + 'h.jpg" alt="' + m + '+ hour day badge" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px;' + (unlocked?'':' filter:grayscale(1); opacity:0.35;') + '">' +
         (unlocked ? '<div class="badge-date">' + qualifyingDays.length + ' day' + (qualifyingDays.length===1?'':'s') + '</div>' : '') +
       '</div>';
     }).join('') + '</div>';
@@ -1342,7 +1380,7 @@ function renderAvgRing(){
 function renderAvgBreakdownList(subjTotals){
   const sorted = subjTotals.slice().sort(function(a,b){ return b.avgMin-a.avgMin; });
   document.getElementById('avgBreakdown').innerHTML = '<ul class="breakdown-list">' + sorted.map(function(t){
-    return '<li><span class="bd-left"><span class="dot" style="background:'+t.subj.color+'"></span>'+t.subj.name+'</span><span class="mono">'+formatMinutesShort(t.avgMin)+'</span></li>';
+    return '<li><span class="bd-left"><span class="dot" style="background:'+t.subj.color+'"></span>'+esc(t.subj.name)+'</span><span class="mono">'+formatMinutesShort(t.avgMin)+'</span></li>';
   }).join('') + '</ul>';
 }
 
@@ -1376,7 +1414,7 @@ function renderSessionRing(){
 function renderSessionBreakdownList(subjSessionAvg){
   const sorted = subjSessionAvg.slice().sort(function(a,b){ return b.avgMin-a.avgMin; });
   document.getElementById('sessionBreakdown').innerHTML = '<ul class="breakdown-list">' + sorted.map(function(t){
-    return '<li><span class="bd-left"><span class="dot" style="background:'+t.subj.color+'"></span>'+t.subj.name+'</span><span class="mono">'+formatMinutesShort(t.avgMin)+'</span></li>';
+    return '<li><span class="bd-left"><span class="dot" style="background:'+t.subj.color+'"></span>'+esc(t.subj.name)+'</span><span class="mono">'+formatMinutesShort(t.avgMin)+'</span></li>';
   }).join('') + '</ul>';
 }
 
@@ -1485,6 +1523,86 @@ function renderBackupOverlay(){
   });
 }
 
+function subjectMetGoalOnDate(subj, dateStr){
+  if(!subj.dailyGoalMin) return null;
+  const min = state.sessions.filter(function(s){ return s.subjectId===subj.id && fmtDate(s.start)===dateStr; }).reduce(function(a,s){ return a+s.durationMin; },0);
+  return min >= subj.dailyGoalMin;
+}
+function renderGoalsOverlay(){
+  const panel = document.getElementById('overlayPanel');
+  const now = new Date();
+  const ref = new Date(now.getFullYear(), now.getMonth()-goalMonthOffset, 1);
+  const year = ref.getFullYear(), month = ref.getMonth();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const isCurrentMonth = goalMonthOffset===0;
+  const monthLabel = ref.toLocaleDateString('en-US',{month:'long', year:'numeric'});
+  const todayS = todayStr();
+  const daysElapsed = isCurrentMonth ? now.getDate() : daysInMonth;
+
+  let dayHeaders = '';
+  const dateStrs = [];
+  for(let d=1; d<=daysInMonth; d++){
+    const dateObj = new Date(year, month, d);
+    const dateStr = fmtDate(dateObj);
+    dateStrs.push(dateStr);
+    dayHeaders += '<th>' + dateObj.toLocaleDateString('en-US',{weekday:'narrow'}) + '<br>' + d + '</th>';
+  }
+
+  const bodyRows = state.subjects.map(function(subj){
+    const cells = dateStrs.map(function(dateStr){
+      if(dateStr > todayS) return '<td></td>';
+      const met = subjectMetGoalOnDate(subj, dateStr);
+      if(met===null) return '<td style="color:var(--text-3);">\u2013</td>';
+      return '<td><span class="goal-check ' + (met?'met':'') + '">' + (met?'\u2713':'') + '</span></td>';
+    }).join('');
+    return '<tr><td class="subj-cell"><span class="dot" style="background:' + subj.color + '"></span>' + esc(subj.name) + '</td>' + cells + '</tr>';
+  }).join('');
+
+  let totalMet = 0, totalPossible = 0;
+  const analysisRows = state.subjects.map(function(subj){
+    if(!subj.dailyGoalMin){
+      return '<div class="analysis-row"><span>' + esc(subj.name) + '</span><span class="mono" style="color:var(--text-3);">\u2013</span><span class="mono" style="color:var(--text-3);">\u2013</span><span class="hint" style="margin:0; text-align:left;">No goal set</span></div>';
+    }
+    let met = 0;
+    for(let i=0;i<daysElapsed;i++){ if(subjectMetGoalOnDate(subj, dateStrs[i])) met++; }
+    totalMet += met; totalPossible += daysElapsed;
+    const pct = daysElapsed ? Math.round((met/daysElapsed)*100) : 0;
+    return '<div class="analysis-row"><span>' + esc(subj.name) + '</span><span class="mono">' + daysElapsed + '</span><span class="mono">' + met + '</span><div class="a-bar-track"><div class="a-bar-fill" style="width:' + pct + '%;"></div></div></div>';
+  }).join('');
+  const overallPct = totalPossible ? Math.round((totalMet/totalPossible)*100) : 0;
+
+  panel.innerHTML =
+    '<div class="session-panel-head"><h2>Daily Goals</h2><button class="panel-close-btn" id="panelCloseBtn2">&times;</button></div>' +
+
+    '<p class="section-label">Daily minutes goal per subject</p>' +
+    state.subjects.map(function(s){
+      return '<div class="goal-set-row"><span class="gs-left"><span class="dot" style="background:' + s.color + '"></span>' + esc(s.name) + '</span><div style="display:flex; align-items:center; gap:6px;"><input type="number" min="0" step="5" value="' + (s.dailyGoalMin||'') + '" data-goalsubj="' + s.id + '" placeholder="off"><span style="color:var(--text-3); font-size:11px;">min/day</span></div></div>';
+    }).join('') +
+
+    '<div class="punch-head" style="margin-top:18px;"><p class="section-label" style="margin:0;">' + monthLabel + '</p><div style="display:flex; gap:6px;"><button class="punch-nav" id="goalMonthPrev">&lsaquo;</button><button class="punch-nav" id="goalMonthNext" ' + (isCurrentMonth?'disabled':'') + '>&rsaquo;</button></div></div>' +
+    '<div class="goalgrid-wrap"><table class="goalgrid"><thead><tr><th class="subj-cell">Subject</th>' + dayHeaders + '</tr></thead><tbody>' + bodyRows + '</tbody></table></div>' +
+
+    '<p class="section-label" style="margin-top:22px;">Analysis \u00b7 ' + monthLabel + '</p>' +
+    '<div class="card"><div class="analysis-head-row"><span>Subject</span><span>Days</span><span>Met</span><span>Progress</span></div>' +
+    analysisRows +
+    '<div class="stat-hero" style="margin-top:14px;"><span class="section-label" style="margin:0;">Overall</span><span class="delta up">' + overallPct + '%</span></div></div>';
+
+  document.getElementById('panelCloseBtn2').addEventListener('click', closeOverlay);
+  document.getElementById('goalMonthPrev').addEventListener('click', function(){ goalMonthOffset++; renderGoalsOverlay(); });
+  document.getElementById('goalMonthNext').addEventListener('click', function(){ goalMonthOffset = Math.max(0, goalMonthOffset-1); renderGoalsOverlay(); });
+  panel.querySelectorAll('[data-goalsubj]').forEach(function(inp){
+    inp.addEventListener('change', function(){
+      const subj = subjectById(inp.dataset.goalsubj);
+      if(subj){
+        const v = parseInt(inp.value,10);
+        subj.dailyGoalMin = (v && v>0) ? v : null;
+        storageSet(STORAGE_KEYS.subjects, state.subjects);
+        renderGoalsOverlay();
+      }
+    });
+  });
+}
+
 function renderBadgeDetailOverlay(milestone){
 
   const panel = document.getElementById('overlayPanel');
@@ -1501,12 +1619,12 @@ function renderBadgeDetailOverlay(milestone){
     '<div id="badgeDayList">' + dates.map(function(date){
       const sessions = byDay[date];
       const total = sessions.reduce(function(a,s){ return a+s.durationMin; },0);
-      const label = date===todayStr() ? 'Today' : new Date(date).toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'});
+      const label = date===todayStr() ? 'Today' : parseLocalDate(date).toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'});
       const bySubj = {};
       sessions.forEach(function(s){ bySubj[s.subjectId]=(bySubj[s.subjectId]||0)+s.durationMin; });
       const subjRows = Object.entries(bySubj).sort(function(a,b){ return b[1]-a[1]; }).map(function(entry){
         const subj = subjectById(entry[0]);
-        return '<li><span class="bd-left"><span class="dot" style="background:'+(subj?subj.color:'#888')+'"></span>'+(subj?subj.name:'Deleted subject')+'</span><span class="mono">'+minutesToH(entry[1])+'</span></li>';
+        return '<li><span class="bd-left"><span class="dot" style="background:'+(subj?subj.color:'#888')+'"></span>'+(subj?esc(subj.name):'Deleted subject')+'</span><span class="mono">'+minutesToH(entry[1])+'</span></li>';
       }).join('');
       return '<div class="day-row"><div class="day-row-head" data-date="' + date + '"><span class="drh-date">' + label + '</span><span class="drh-right">' + minutesToH(total) + '<span class="day-row-arrow">\u25be</span></span></div><div class="day-row-detail" id="detail-' + date + '"><ul class="breakdown-list">' + subjRows + '</ul></div></div>';
     }).join('') + '</div>';
@@ -1537,7 +1655,7 @@ function renderDailyBadgeDetailOverlay(hoursThreshold){
       sessionsForDay.forEach(function(s){ bySubj[s.subjectId]=(bySubj[s.subjectId]||0)+s.durationMin; });
       const subjRows = Object.entries(bySubj).sort(function(a,b){ return b[1]-a[1]; }).map(function(entry){
         const subj = subjectById(entry[0]);
-        return '<li><span class="bd-left"><span class="dot" style="background:'+(subj?subj.color:'#888')+'"></span>'+(subj?subj.name:'Deleted subject')+'</span><span class="mono">'+minutesToH(entry[1])+'</span></li>';
+        return '<li><span class="bd-left"><span class="dot" style="background:'+(subj?subj.color:'#888')+'"></span>'+(subj?esc(subj.name):'Deleted subject')+'</span><span class="mono">'+minutesToH(entry[1])+'</span></li>';
       }).join('');
       return '<div class="day-row"><div class="day-row-head" data-date="' + d.date + '"><span class="drh-date">' + label + '</span><span class="drh-right">' + minutesToH(d.min) + '<span class="day-row-arrow">\u25be</span></span></div><div class="day-row-detail" id="daily-detail-' + d.date + '"><ul class="breakdown-list">' + subjRows + '</ul></div></div>';
     }).join('') + '</div>';
@@ -1561,7 +1679,7 @@ function renderTodoOverlay(){
     '<div class="session-panel-head"><h2>To-do list</h2><button class="panel-close-btn" id="panelCloseBtn2">&times;</button></div>' +
     '<div class="todo-add-row"><input type="text" id="todoInput" placeholder="Add a task"><button class="btn btn-primary" id="todoAddBtn" style="font-size:13px; padding:9px 16px;">Add</button></div>' +
     '<div id="todoList">' + (state.todos.length ? state.todos.map(function(t){
-      return '<div class="todo-item"><button class="todo-check ' + (t.done?'checked':'') + '" data-id="' + t.id + '">' + (t.done?'\u2713':'') + '</button><span class="todo-text ' + (t.done?'done':'') + '">' + t.text + '</span><button class="del-btn" data-todo="' + t.id + '">&times;</button></div>';
+      return '<div class="todo-item"><button class="todo-check ' + (t.done?'checked':'') + '" data-id="' + t.id + '">' + (t.done?'\u2713':'') + '</button><span class="todo-text ' + (t.done?'done':'') + '">' + esc(t.text) + '</span><button class="del-btn" data-todo="' + t.id + '">&times;</button></div>';
     }).join('') : '<div class="empty-state">Nothing on your list yet.</div>') + '</div>';
 
   document.getElementById('panelCloseBtn2').addEventListener('click', closeOverlay);
@@ -1618,7 +1736,7 @@ function renderInsight(){
     const when = e.date===todayS ? 'today' : 'tomorrow';
     const timeStr = e.time ? (' at ' + fmtTimeLabel(e.time)) : '';
     const moreStr = sorted.length>1 ? (' You also have ' + (sorted.length-1) + ' more coming up \u2014 check the Plan tab.') : '';
-    text = (subj?subj.name:'Your') + ' ' + e.type + ' \u201c' + e.title + '\u201d is ' + when + timeStr + '. ' + (e.type==='exam' ? 'Good time to review it.' : 'Make sure it\u2019s done in time.') + moreStr;
+    text = (subj?esc(subj.name):'Your') + ' ' + e.type + ' \u201c' + esc(e.title) + '\u201d is ' + when + timeStr + '. ' + (e.type==='exam' ? 'Good time to review it.' : 'Make sure it\u2019s done in time.') + moreStr;
     isUrgent = true;
   } else {
     const todayMin = state.sessions.filter(function(s){ return fmtDate(s.start)===todayStr(); }).reduce(function(a,s){ return a+s.durationMin; },0);
@@ -1636,7 +1754,7 @@ function renderInsight(){
     if(state.sessions.length===0){
       text = 'Log your first session and I\u2019ll start spotting patterns in your study habits.';
     }else if(longFlag){
-      text = 'Your ' + longFlag.name + ' sessions average over 45 minutes. Try splitting them with a short break in between.';
+      text = 'Your ' + esc(longFlag.name) + ' sessions average over 45 minutes. Try splitting them with a short break in between.';
     }else if(streak>=5){
       text = streak + '-day streak. That kind of consistency is what actually moves the needle.';
     }else if(avg7>0 && todayMin > avg7*1.3){
@@ -1891,6 +2009,17 @@ function renderTrends(){
   const allTimeMin = state.sessions.reduce(function(a,s){ return a+s.durationMin; },0);
 
   panel.innerHTML =
+    '<div class="trends-top-row">' +
+      '<button class="icon-toggle-btn" id="chartTypeToggle" aria-label="Toggle chart type" title="Toggle bar/line">' +
+        (chartTypeMode==='line'
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17l5-5 4 3 7-9"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="12" width="3" height="8"/><rect x="11" y="7" width="3" height="13"/><rect x="17" y="15" width="3" height="5"/></svg>') +
+      '</button>' +
+      '<select id="trendsSubjectSelect" class="trends-subj-select">' +
+        '<option value="all"' + (trendsSubjectFilter==='all'?' selected':'') + '>All subjects</option>' +
+        state.subjects.map(function(s){ return '<option value="' + s.id + '"' + (trendsSubjectFilter===s.id?' selected':'') + '>' + esc(s.name) + '</option>'; }).join('') +
+      '</select>' +
+    '</div>' +
     '<div class="period-row" id="periodRow">' +
       '<button class="period-btn ' + (activePeriod==='day'?'active':'') + '" data-p="day">Day</button>' +
       '<button class="period-btn ' + (activePeriod==='week'?'active':'') + '" data-p="week">Week</button>' +
@@ -1938,6 +2067,14 @@ function renderTrends(){
   document.querySelectorAll('#periodRow .period-btn').forEach(function(btn){
     btn.addEventListener('click', function(){ activePeriod = btn.dataset.p; weekOffset = 0; monthOffset = 0; yearOffset = 0; renderTrends(); });
   });
+  document.getElementById('chartTypeToggle').addEventListener('click', function(){
+    chartTypeMode = chartTypeMode==='bar' ? 'line' : 'bar';
+    renderTrends();
+  });
+  document.getElementById('trendsSubjectSelect').addEventListener('change', function(){
+    trendsSubjectFilter = this.value;
+    renderTrendsChart();
+  });
   document.getElementById('weekPrev').addEventListener('click', function(){
     if(activePeriod==='week') weekOffset += 1;
     else if(activePeriod==='month') monthOffset += 1;
@@ -1973,8 +2110,9 @@ function renderTrends(){
   renderTrendsChart();
 }
 function renderLegend(){
-  document.getElementById('trendLegend').innerHTML = state.subjects.map(function(s){
-    return '<span><span class="dot" style="background:' + s.color + '"></span>' + s.name + '</span>';
+  const subjectsToShow = trendsSubjectFilter==='all' ? state.subjects : state.subjects.filter(function(s){ return s.id===trendsSubjectFilter; });
+  document.getElementById('trendLegend').innerHTML = subjectsToShow.map(function(s){
+    return '<span><span class="dot" style="background:' + s.color + '"></span>' + esc(s.name) + '</span>';
   }).join('');
 }
 function renderAllTimeBreakdown(){
@@ -1988,7 +2126,7 @@ function renderAllTimeBreakdown(){
   state.sessions.forEach(function(s){ if(totals[s.subjectId]!=null) totals[s.subjectId]+=s.durationMin; });
   const rows = state.subjects.slice().sort(function(a,b){ return totals[b.id]-totals[a.id]; });
   el.innerHTML = '<ul class="breakdown-list" style="margin-top:10px;">' + rows.map(function(s){
-    return '<li><span class="bd-left"><span class="dot" style="background:'+s.color+'"></span>'+s.name+'</span><span class="mono">'+minutesToH(totals[s.id])+'</span></li>';
+    return '<li><span class="bd-left"><span class="dot" style="background:'+s.color+'"></span>'+esc(s.name)+'</span><span class="mono">'+minutesToH(totals[s.id])+'</span></li>';
   }).join('') + '</ul>';
 }
 function renderPunchcard(){
@@ -2037,8 +2175,13 @@ function renderCompareList(){
 function sumForSubjectRange(subjectId, startDate, endDate){
   return state.sessions.filter(function(s){ return s.subjectId===subjectId && fmtDate(s.start)>=startDate && fmtDate(s.start)<=endDate; }).reduce(function(a,s){ return a+s.durationMin; },0);
 }
+function sumMaybeFiltered(start, end){
+  if(trendsSubjectFilter==='all') return sumForRange(start, end);
+  return sumForSubjectRange(trendsSubjectFilter, start, end);
+}
 function renderTrendsChart(){
   const ctx = document.getElementById('trendsCanvas');
+  if(!window.Chart){ const bb=document.getElementById('barBreakdown'); if(bb) bb.innerHTML='<div class="empty-state" style="padding:12px 0;">Charts need an internet connection the first time. Reconnect and reopen Trends.</div>'; return; }
   if(trendsChart){ trendsChart.destroy(); trendsChart=null; }
   document.getElementById('barBreakdown').innerHTML = '';
   let labels=[], datasets=[], totalMin=0, prevMin=0, title='';
@@ -2046,26 +2189,33 @@ function renderTrendsChart(){
 
   function buildDatasetsForDays(dayStrs){
     return state.subjects.map(function(subj){
-      return { label: subj.name, data: dayStrs.map(function(d){ return state.sessions.filter(function(x){ return x.subjectId===subj.id && fmtDate(x.start)===d; }).reduce(function(a,x){ return a+x.durationMin; },0)/60; }), backgroundColor: subj.color, borderRadius:3 };
+      return { label: subj.name, subjId: subj.id, data: dayStrs.map(function(d){ return state.sessions.filter(function(x){ return x.subjectId===subj.id && fmtDate(x.start)===d; }).reduce(function(a,x){ return a+x.durationMin; },0)/60; }), backgroundColor: subj.color, borderRadius:3 };
     });
   }
 
   if(activePeriod==='day'){
     title = 'Today';
-    labels = state.subjects.map(function(s){ return s.name; });
-    const data = state.subjects.map(function(s){ return state.sessions.filter(function(x){ return x.subjectId===s.id && fmtDate(x.start)===todayStr(); }).reduce(function(a,x){ return a+x.durationMin; },0)/60; });
-    datasets = [{ label:'Today', data, backgroundColor: state.subjects.map(function(s){return s.color;}), borderRadius:4 }];
-    totalMin = sumForRange(todayStr(), todayStr());
-    prevMin = sumForRange(daysAgoStr(1), daysAgoStr(1));
-    currentBuckets = state.subjects.map(function(){ return { start: todayStr(), end: todayStr() }; });
+    if(trendsSubjectFilter==='all'){
+      labels = state.subjects.map(function(s){ return s.name; });
+      const data = state.subjects.map(function(s){ return state.sessions.filter(function(x){ return x.subjectId===s.id && fmtDate(x.start)===todayStr(); }).reduce(function(a,x){ return a+x.durationMin; },0)/60; });
+      datasets = [{ label:'Today', data, backgroundColor: state.subjects.map(function(s){return s.color;}), borderRadius:4 }];
+    } else {
+      const fSubj = subjectById(trendsSubjectFilter);
+      labels = [fSubj ? fSubj.name : ''];
+      const val = fSubj ? state.sessions.filter(function(x){ return x.subjectId===fSubj.id && fmtDate(x.start)===todayStr(); }).reduce(function(a,x){ return a+x.durationMin; },0)/60 : 0;
+      datasets = [{ label:'Today', data:[val], backgroundColor:[fSubj?fSubj.color:'#888'], borderRadius:4 }];
+    }
+    totalMin = sumMaybeFiltered(todayStr(), todayStr());
+    prevMin = sumMaybeFiltered(daysAgoStr(1), daysAgoStr(1));
+    currentBuckets = (trendsSubjectFilter==='all' ? state.subjects : [subjectById(trendsSubjectFilter)]).map(function(){ return { start: todayStr(), end: todayStr() }; });
   } else if(activePeriod==='week'){
     const shift = weekOffset*7;
     const dayStrs = [6,5,4,3,2,1,0].map(function(n){ return daysAgoStr(n+shift); });
-    title = weekOffset===0 ? 'This week' : (new Date(dayStrs[0]).toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' \u2013 ' + new Date(dayStrs[6]).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
-    labels = dayStrs.map(function(d){ return new Date(d).toLocaleDateString('en-US',{weekday:'short'}); });
+    title = weekOffset===0 ? 'This week' : (parseLocalDate(dayStrs[0]).toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' \u2013 ' + parseLocalDate(dayStrs[6]).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+    labels = dayStrs.map(function(d){ return parseLocalDate(d).toLocaleDateString('en-US',{weekday:'short'}); });
     datasets = buildDatasetsForDays(dayStrs);
-    totalMin = sumForRange(dayStrs[0], dayStrs[6]);
-    prevMin = sumForRange(daysAgoStr(13+shift), daysAgoStr(7+shift));
+    totalMin = sumMaybeFiltered(dayStrs[0], dayStrs[6]);
+    prevMin = sumMaybeFiltered(daysAgoStr(13+shift), daysAgoStr(7+shift));
     currentBuckets = dayStrs.map(function(d){ return { start:d, end:d }; });
   } else if(activePeriod==='month'){
     const now = new Date();
@@ -2079,17 +2229,17 @@ function renderTrendsChart(){
       return { start: fmtDate(new Date(year,month,r[0])), end: fmtDate(new Date(year,month,r[1])) };
     });
     datasets = state.subjects.map(function(subj){
-      return { label: subj.name, data: monthRanges.map(function(r){ return sumForSubjectRange(subj.id, r.start, r.end)/60; }), backgroundColor: subj.color, borderRadius:3 };
+      return { label: subj.name, subjId: subj.id, data: monthRanges.map(function(r){ return sumForSubjectRange(subj.id, r.start, r.end)/60; }), backgroundColor: subj.color, borderRadius:3 };
     });
     title = isCurrentMonth ? 'This month' : refDate.toLocaleDateString('en-US',{month:'long', year:'numeric'});
     const monthStartStr = fmtDate(new Date(year,month,1));
     const monthEndStr = fmtDate(new Date(year,month,daysInMonth));
-    totalMin = sumForRange(monthStartStr, isCurrentMonth ? todayStr() : monthEndStr);
+    totalMin = sumMaybeFiltered(monthStartStr, isCurrentMonth ? todayStr() : monthEndStr);
     const prevMonthRef = new Date(year, month-1, 1);
     const pYear = prevMonthRef.getFullYear(), pMonth = prevMonthRef.getMonth();
     const prevDaysInMonth = new Date(pYear, pMonth+1, 0).getDate();
     const sameDayCap = isCurrentMonth ? Math.min(now.getDate(), prevDaysInMonth) : prevDaysInMonth;
-    prevMin = sumForRange(fmtDate(new Date(pYear,pMonth,1)), fmtDate(new Date(pYear,pMonth,sameDayCap)));
+    prevMin = sumMaybeFiltered(fmtDate(new Date(pYear,pMonth,1)), fmtDate(new Date(pYear,pMonth,sameDayCap)));
     currentBuckets = monthRanges;
   } else {
     const now = new Date();
@@ -2102,13 +2252,17 @@ function renderTrendsChart(){
       monthRanges.push({ start: fmtDate(first), end: fmtDate(last) });
     }
     datasets = state.subjects.map(function(subj){
-      return { label: subj.name, data: monthRanges.map(function(r){ return sumForSubjectRange(subj.id, r.start, r.end)/60; }), backgroundColor: subj.color, borderRadius:3 };
+      return { label: subj.name, subjId: subj.id, data: monthRanges.map(function(r){ return sumForSubjectRange(subj.id, r.start, r.end)/60; }), backgroundColor: subj.color, borderRadius:3 };
     });
     title = isCurrentYear ? 'This year' : String(year);
-    totalMin = sumForRange(fmtDate(new Date(year,0,1)), isCurrentYear ? todayStr() : fmtDate(new Date(year,11,31)));
+    totalMin = sumMaybeFiltered(fmtDate(new Date(year,0,1)), isCurrentYear ? todayStr() : fmtDate(new Date(year,11,31)));
     const sameDateLastYear = isCurrentYear ? fmtDate(new Date(year-1, now.getMonth(), now.getDate())) : fmtDate(new Date(year-1,11,31));
-    prevMin = sumForRange(fmtDate(new Date(year-1,0,1)), sameDateLastYear);
+    prevMin = sumMaybeFiltered(fmtDate(new Date(year-1,0,1)), sameDateLastYear);
     currentBuckets = monthRanges;
+  }
+
+  if(activePeriod!=='day' && trendsSubjectFilter!=='all'){
+    datasets = datasets.filter(function(d){ return d.subjId===trendsSubjectFilter; });
   }
 
   document.getElementById('trendTitle').textContent = title;
@@ -2137,14 +2291,22 @@ function renderTrendsChart(){
     deltaEl.className = 'delta '+(pctChange>=0?'up':'down');
   }else{ deltaEl.textContent = ''; }
 
+  const chartDatasets = datasets.map(function(d){
+    if(chartTypeMode==='line'){
+      const lineColor = Array.isArray(d.backgroundColor) ? d.backgroundColor[0] : d.backgroundColor;
+      return Object.assign({}, d, { borderColor: lineColor, backgroundColor: lineColor, pointBackgroundColor: lineColor, tension:0.35, pointRadius:3, borderWidth:2, fill:false });
+    }
+    return d;
+  });
+
   trendsChart = new Chart(ctx, {
-    type:'bar',
-    data:{ labels, datasets },
+    type: chartTypeMode,
+    data:{ labels, datasets: chartDatasets },
     options:{
       responsive:true, maintainAspectRatio:false,
       scales:{
-        x:{ stacked: activePeriod!=='day', grid:{display:false}, ticks:{color:'#63656F', font:{size:10.5}} },
-        y:{ stacked: activePeriod!=='day', grid:{display:false}, ticks:{color:'#63656F', font:{size:10.5}} }
+        x:{ stacked: chartTypeMode==='bar' && activePeriod!=='day', grid:{display:false}, ticks:{color:'#63656F', font:{size:10.5}} },
+        y:{ stacked: chartTypeMode==='bar' && activePeriod!=='day', grid:{display:false}, ticks:{color:'#63656F', font:{size:10.5}} }
       },
       plugins:{ legend:{display:false} },
       onClick:function(evt, elements){
@@ -2170,7 +2332,7 @@ function showBarBreakdown(idx){
   const el = document.getElementById('barBreakdown');
   if(!totals.length){ el.innerHTML = '<div class="empty-state" style="padding:12px 0;">No sessions in this period.</div>'; return; }
   el.innerHTML = '<div class="breakdown-head" style="display:flex; flex-direction:column; gap:1px;"><div style="display:flex; justify-content:space-between; align-items:center;"><span>' + label + '</span><span class="mono" style="color:var(--text);">' + minutesToH(barTotal) + ' total</span></div><span style="font-size:10.5px; color:var(--text-3); font-family:\'IBM Plex Mono\',monospace;">' + dateSubtitle + '</span></div><ul class="breakdown-list">' + totals.map(function(t){
-    return '<li><span class="bd-left"><span class="dot" style="background:'+t.subj.color+'"></span>'+t.subj.name+'</span><span class="mono">'+minutesToH(t.min)+'</span></li>';
+    return '<li><span class="bd-left"><span class="dot" style="background:'+t.subj.color+'"></span>'+esc(t.subj.name)+'</span><span class="mono">'+minutesToH(t.min)+'</span></li>';
   }).join('') + '</ul>' + (activePeriod==='month' ? '<button class="btn btn-ghost" id="dayWiseBtn" style="width:100%; margin-top:10px; font-size:12px; padding:9px 0;">See day-by-day breakdown</button>' : '');
 
   if(activePeriod==='month'){
@@ -2228,12 +2390,12 @@ function renderPlan(){
     '<p class="section-label">Upcoming</p>' +
     (upcoming.length ? upcoming.map(function(e){
       const subj = subjectById(e.subjectId);
-      const daysUntil = Math.round((new Date(e.date) - new Date(todayStr()))/86400000);
+      const daysUntil = Math.round((parseLocalDate(e.date) - parseLocalDate(todayStr()))/86400000);
       const when = daysUntil===0 ? 'Today' : daysUntil===1 ? 'Tomorrow' : daysUntil + ' days';
       const timeStr = e.time ? (' \u00b7 ' + fmtTimeLabel(e.time)) : '';
       const estStr = e.estMin ? (' \u00b7 ~' + e.estMin + ' min') : '';
       return '<div class="plan-entry" style="--entry-color:' + (subj?subj.color:'#888') + '">' +
-        '<div class="plan-entry-info"><div class="title">' + (e.priority?'\u2b50 ':'') + e.title + '</div><div class="meta">' + (subj?subj.name:'') + ' &middot; ' + when + timeStr + estStr + '</div></div>' +
+        '<div class="plan-entry-info"><div class="title">' + (e.priority?'\u2b50 ':'') + esc(e.title) + '</div><div class="meta">' + (subj?esc(subj.name):'') + ' &middot; ' + when + timeStr + estStr + '</div></div>' +
         '<div style="display:flex; align-items:center; gap:6px;"><button class="star-btn" data-star="' + e.id + '" aria-label="Mark priority" style="background:none; border:none; font-size:16px; padding:4px; cursor:pointer; opacity:' + (e.priority?'1':'0.35') + ';">\u2b50</button><span class="plan-badge ' + e.type + '">' + e.type + '</span><button class="del-btn" data-id="' + e.id + '">&times;</button></div>' +
       '</div>';
     }).join('') : '<div class="empty-state">Nothing coming up. Add an exam or homework entry below.</div>') +
@@ -2246,7 +2408,7 @@ function renderPlan(){
         '<button class="type-btn" data-t="other">Other</button>' +
       '</div>' +
       '<select id="planSubjSelect">' +
-        state.subjects.map(function(s){ return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('') +
+        state.subjects.map(function(s){ return '<option value="' + s.id + '">' + esc(s.name) + '</option>'; }).join('') +
       '</select>' +
       '<input type="text" id="planTitleInput" placeholder="Title (e.g. Chapter 6, Midterm)">' +
       '<div class="field-row">' +
@@ -2348,7 +2510,7 @@ function renderBusyList(){
   if(!state.busyBlocks.length){ el.innerHTML = '<div class="empty-state" style="padding:16px 0;">No busy times added yet.</div>'; return; }
   const sorted = state.busyBlocks.slice().sort(function(a,b){ return a.day-b.day || (a.start<b.start?-1:1); });
   el.innerHTML = sorted.map(function(b){
-    return '<div class="busy-entry"><div class="be-info"><div class="title">' + b.label + '</div><div class="meta">' + DAY_NAMES[b.day] + ' \u00b7 ' + fmtTimeLabel(b.start) + '\u2013' + fmtTimeLabel(b.end) + '</div></div><button class="del-btn" data-bb="' + b.id + '">&times;</button></div>';
+    return '<div class="busy-entry"><div class="be-info"><div class="title">' + esc(b.label) + '</div><div class="meta">' + DAY_NAMES[b.day] + ' \u00b7 ' + fmtTimeLabel(b.start) + '\u2013' + fmtTimeLabel(b.end) + '</div></div><button class="del-btn" data-bb="' + b.id + '">&times;</button></div>';
   }).join('');
   el.querySelectorAll('.del-btn[data-bb]').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -2362,7 +2524,14 @@ function renderBusyList(){
 function notifyLocal(title, body){
   if(!('Notification' in window)) return;
   if(Notification.permission !== 'granted') return;
-  try{ new Notification(title, { body: body }); }catch(e){}
+  try{
+    if(navigator.serviceWorker && navigator.serviceWorker.getRegistration){
+      navigator.serviceWorker.getRegistration().then(function(reg){
+        if(reg && reg.showNotification){ reg.showNotification(title, { body: body, icon:'icon-192.png' }); }
+        else { new Notification(title, { body: body }); }
+      }).catch(function(){ try{ new Notification(title, { body: body }); }catch(e){} });
+    } else { new Notification(title, { body: body }); }
+  }catch(e){}
 }
 function maybeNotifyUpcoming(){
   if(!state.settings.notifyEnabled) return;
@@ -2415,10 +2584,10 @@ function buildSessionListHtml(){
     return '<div class="empty-state">' + (logDateFilter ? 'No sessions on that date.' : 'No sessions yet. Start a timer from the Track tab.') + '</div>';
   }
   return dates.map(function(date){
-    const label = date===todayStr() ? 'Today' : new Date(date).toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'});
+    const label = date===todayStr() ? 'Today' : parseLocalDate(date).toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'});
     const entries = grouped[date].map(function(s){
       const subj = subjectById(s.subjectId);
-      const options = state.subjects.map(function(sub){ return '<option value="' + sub.id + '"' + (sub.id===s.subjectId?' selected':'') + '>' + sub.name + '</option>'; }).join('');
+      const options = state.subjects.map(function(sub){ return '<option value="' + sub.id + '"' + (sub.id===s.subjectId?' selected':'') + '>' + esc(sub.name) + '</option>'; }).join('');
       return '<div class="log-entry" style="--entry-color:' + (subj?subj.color:'#888') + '">' +
         '<div class="log-entry-info"><select class="session-subj-select" data-session="' + s.id + '">' + options + (subj?'':'<option value="" selected disabled>Deleted subject</option>') + '</select><span class="time">' + fmtTime(s.start) + ' \u2013 ' + fmtTime(s.end) + '</span></div>' +
         '<div style="display:flex; align-items:center; gap:10px;"><span class="log-entry-dur">' + s.durationMin + 'm</span><button class="del-btn" data-id="' + s.id + '" aria-label="Delete session">&times;</button></div>' +
@@ -2434,7 +2603,7 @@ function renderSessionPanel(){
     '<div class="log-filter-row"><input type="date" id="logDateFilterInput" value="' + (logDateFilter||'') + '"><button class="btn btn-ghost" id="logResetBtn" style="font-size:12px; padding:9px 14px;">Reset</button></div>' +
     '<button class="btn btn-ghost" id="toggleManualEntry" style="font-size:12px; padding:8px 14px; margin-bottom:14px;">+ Add manually</button>' +
     '<div class="add-plan-form" id="manualEntryForm">' +
-      '<select id="manualSubjSelect">' + state.subjects.map(function(s){ return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('') + '</select>' +
+      '<select id="manualSubjSelect">' + state.subjects.map(function(s){ return '<option value="' + s.id + '">' + esc(s.name) + '</option>'; }).join('') + '</select>' +
       '<div><div class="field-label">Date</div><input type="date" id="manualDateInput" value="' + todayStr() + '"></div>' +
       '<div class="field-row">' +
         '<div><div class="field-label">Start time (optional)</div><input type="time" id="manualStartInput"></div>' +
@@ -2547,7 +2716,7 @@ function renderLog(){
 
   const subjList = document.getElementById('subjList');
   subjList.innerHTML = state.subjects.map(function(s){
-    return '<li><span class="subj-left"><span class="dot" style="background:' + s.color + '"></span>' + s.name + '</span><button class="del-btn" data-subj="' + s.id + '" aria-label="Delete subject">&times;</button></li>';
+    return '<li><span class="subj-left"><span class="dot" style="background:' + s.color + '"></span>' + esc(s.name) + '</span><button class="del-btn" data-subj="' + s.id + '" aria-label="Delete subject">&times;</button></li>';
   }).join('');
   subjList.querySelectorAll('.del-btn[data-subj]').forEach(function(btn){
     btn.addEventListener('click', function(){
