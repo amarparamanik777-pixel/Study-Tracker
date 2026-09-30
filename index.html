@@ -546,6 +546,24 @@
   .w-soon-count{margin-top:20px; font-size:13.5px; color:var(--text-2);}
   .w-soon-count b{color:var(--winter-accent); font-family:'IBM Plex Mono',monospace; font-size:17px;}
   .w-soon-desc{margin-top:14px; font-size:12.5px; color:var(--text-3); max-width:270px; line-height:1.6;}
+
+  /* ================= TO-DO LIST PAGE ================= */
+  .t-filter-drawer{z-index:210;}
+  .w-header-title .t-brand span{color:var(--success);}
+  .t-item{padding:10px 0; border-bottom:1px solid var(--border);}
+  .t-item:last-child{border-bottom:none;}
+  .t-main-row{display:flex; align-items:center; gap:10px;}
+  .t-main-row .todo-text{flex:1;}
+  .t-edit-btn{background:none; border:none; color:var(--text-3); cursor:pointer; padding:4px; flex:0 0 auto; display:flex;}
+  .t-edit-btn svg{width:15px; height:15px;}
+  .t-meta-row{display:flex; align-items:center; gap:8px; margin:5px 0 0 30px; flex-wrap:wrap;}
+  .t-subject-tag{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; color:var(--text-2);}
+  .t-subject-tag .dot{width:7px; height:7px; border-radius:50%; flex:0 0 auto;}
+  .t-time-badge{font-size:10.5px; padding:2px 7px; border-radius:9px; background:var(--surface-3); color:var(--text-2); font-family:'IBM Plex Mono',monospace;}
+  .t-time-badge.overdue{background:var(--danger-dim); color:var(--danger);}
+  .t-time-badge.soon{background:var(--accent-dim); color:var(--accent);}
+  .t-today-badge{font-size:9.5px; padding:2px 6px; border-radius:8px; background:var(--surface-3); color:var(--text-3); text-transform:uppercase; letter-spacing:0.4px;}
+  .w-fab.t-fab{border-radius:18px; background:var(--success); color:#0E1A0C;}
 </style>
 </head>
 <body>
@@ -738,6 +756,7 @@ function init(){
   state.events = storageGet(STORAGE_KEYS.events, []);
   state.busyBlocks = storageGet(STORAGE_KEYS.busyBlocks, []);
   state.todos = storageGet(STORAGE_KEYS.todos, []);
+  todoRolloverCheck();
   state.achievements = storageGet(STORAGE_KEYS.achievements, {total:{}, daily:{}});
   state.winterTargets = storageGet(STORAGE_KEYS.winterTargets, []);
   state.winterLogs = storageGet(STORAGE_KEYS.winterLogs, {});
@@ -832,7 +851,7 @@ function buildShell(){
       '</div>';
     document.body.appendChild(drawerBackdrop);
     drawerBackdrop.addEventListener('click', closeDrawer);
-    document.getElementById('drawerTodoBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('todo'); });
+    document.getElementById('drawerTodoBtn').addEventListener('click', function(){ closeDrawer(); openTodoPage(); });
     document.getElementById('drawerWinterBtn').addEventListener('click', function(){ closeDrawer(); openWinterArcPage(); });
     document.getElementById('drawerAchBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('achievements'); });
     document.getElementById('drawerAvgBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('averages'); });
@@ -866,6 +885,33 @@ function buildShell(){
     document.body.appendChild(wPage);
     document.getElementById('winterBackBtn').addEventListener('click', closeWinterArcPage);
     document.getElementById('winterAddBtn').addEventListener('click', function(){ openWinterTargetModal(null); });
+  }
+
+  if(!document.getElementById('todoPage')){
+    const tPage = document.createElement('div');
+    tPage.className = 'w-page';
+    tPage.id = 'todoPage';
+    tPage.innerHTML =
+      '<div class="w-shell">' +
+        '<div class="w-header">' +
+          '<button class="w-back-btn" id="todoBackBtn" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 18l-6-6 6-6"/></svg></button>' +
+          '<div class="w-header-title"><div class="w-brand t-brand">TO-DO <span>LIST</span></div><div class="w-brand-sub" id="todoFilterLabel">All tasks</div></div>' +
+          '<button class="w-back-btn" id="todoFilterBtn" aria-label="Filter tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16l-6.5 7.5v6l-3 1.5v-7.5z"/></svg></button>' +
+        '</div>' +
+        '<div class="w-body" id="todoBody"></div>' +
+        '<button class="w-fab t-fab" id="todoAddBtn">+</button>' +
+      '</div>';
+    document.body.appendChild(tPage);
+    document.getElementById('todoBackBtn').addEventListener('click', closeTodoPage);
+    document.getElementById('todoFilterBtn').addEventListener('click', openTodoDrawer);
+    document.getElementById('todoAddBtn').addEventListener('click', function(){ openTodoTaskModal(null); });
+  }
+  if(!document.getElementById('todoDrawerBackdrop')){
+    const tDrawerBackdrop = document.createElement('div');
+    tDrawerBackdrop.className = 'drawer-backdrop t-filter-drawer';
+    tDrawerBackdrop.id = 'todoDrawerBackdrop';
+    document.body.appendChild(tDrawerBackdrop);
+    tDrawerBackdrop.addEventListener('click', function(e){ if(e.target===tDrawerBackdrop) closeTodoDrawer(); });
   }
 }
 
@@ -3337,6 +3383,299 @@ function saveWinterTargetModal(){
   storageSet(STORAGE_KEYS.winterTargets, state.winterTargets);
   closeWinterTargetModal();
   renderWinterTabContent();
+}
+
+
+
+/* ================= TO-DO LIST PAGE ================= */
+let todoFilter = 'all';
+let todoEditingId = null;
+let todoRefreshInterval = null;
+
+function todoRolloverCheck(){
+  const today = todayStr();
+  let changed = false;
+  state.todos.forEach(function(t){
+    if(t.todayOnly && !t.done && !t.archivedIncomplete && t.createdDate && t.createdDate !== today){
+      t.archivedIncomplete = true;
+      changed = true;
+    }
+  });
+  if(changed) storageSet(STORAGE_KEYS.todos, state.todos);
+}
+function todoFormat12h(hh, mm){
+  const period = hh>=12 ? 'PM' : 'AM';
+  let h12 = hh % 12; if(h12===0) h12 = 12;
+  return h12 + ':' + pad(mm) + ' ' + period;
+}
+function todoTimeLeftInfo(t){
+  if(!t.endTime) return null;
+  const parts = t.endTime.split(':');
+  const hh = parseInt(parts[0],10), mm = parseInt(parts[1],10);
+  if(isNaN(hh) || isNaN(mm)) return null;
+  const now = new Date();
+  const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0, 0);
+  const label = todoFormat12h(hh, mm);
+  const diffMs = target - now;
+  if(diffMs <= 0) return { text: label + ' \u00b7 Overdue', cls:'overdue' };
+  const diffMin = Math.round(diffMs/60000);
+  let rel;
+  if(diffMin < 60) rel = diffMin + ' min left';
+  else { const hrs = Math.floor(diffMin/60); rel = hrs + ' hour' + (hrs===1?'':'s') + ' left'; }
+  return { text: label + ' \u00b7 ' + rel, cls: diffMin<=60 ? 'soon' : '' };
+}
+function todoFilteredList(){
+  let list = state.todos.slice();
+  if(todoFilter==='pending') list = list.filter(function(t){ return !t.done && !t.archivedIncomplete; });
+  else if(todoFilter==='completed') list = list.filter(function(t){ return t.done; });
+  else if(todoFilter==='incomplete') list = list.filter(function(t){ return t.archivedIncomplete && !t.done; });
+  else if(todoFilter && todoFilter.indexOf('subj:')===0){
+    const sid = todoFilter.slice(5);
+    list = list.filter(function(t){ return t.subjectId===sid; });
+  } else {
+    list = list.filter(function(t){ return !t.archivedIncomplete; });
+  }
+  const inc = list.filter(function(t){ return !t.done; });
+  const done = list.filter(function(t){ return t.done; });
+  return inc.concat(done);
+}
+function todoEmptyMsg(){
+  if(todoFilter==='pending') return 'Nothing pending. Nice work!';
+  if(todoFilter==='completed') return 'No completed tasks yet.';
+  if(todoFilter==='incomplete') return 'No missed \u201ctoday only\u201d tasks.';
+  if(todoFilter && todoFilter.indexOf('subj:')===0) return 'No tasks for this subject yet.';
+  return 'Nothing on your list yet.<br>Tap the + button to add a task.';
+}
+function todoItemHtml(t){
+  const subj = t.subjectId ? state.subjects.find(function(s){ return s.id===t.subjectId; }) : null;
+  const timeInfo = todoTimeLeftInfo(t);
+  let meta = '';
+  if(subj || timeInfo || t.todayOnly || t.archivedIncomplete){
+    meta = '<div class="t-meta-row">';
+    if(subj) meta += '<span class="t-subject-tag"><span class="dot" style="background:'+subj.color+'"></span>'+esc(subj.name)+'</span>';
+    if(timeInfo) meta += '<span class="t-time-badge '+timeInfo.cls+'">'+timeInfo.text+'</span>';
+    if(t.archivedIncomplete && !t.done) meta += '<span class="t-today-badge" style="color:var(--danger);">Incomplete</span>';
+    else if(t.todayOnly) meta += '<span class="t-today-badge">Today only</span>';
+    meta += '</div>';
+  }
+  return '<div class="t-item" data-tid="'+t.id+'">' +
+    '<div class="t-main-row">' +
+      '<button class="todo-check '+(t.done?'checked':'')+'" data-tcheck="'+t.id+'">'+(t.done?'\u2713':'')+'</button>' +
+      '<span class="todo-text '+(t.done?'done':'')+'">'+esc(t.text)+'</span>' +
+      '<button class="t-edit-btn" data-tedit="'+t.id+'">'+winterEditIconSvg()+'</button>' +
+    '</div>' +
+    meta +
+  '</div>';
+}
+function updateTodoFilterLabel(){
+  const label = document.getElementById('todoFilterLabel');
+  if(!label) return;
+  let txt = 'All tasks';
+  if(todoFilter==='pending') txt = 'Pending';
+  else if(todoFilter==='completed') txt = 'Completed';
+  else if(todoFilter==='incomplete') txt = 'Incomplete';
+  else if(todoFilter && todoFilter.indexOf('subj:')===0){
+    const s = state.subjects.find(function(x){ return x.id===todoFilter.slice(5); });
+    txt = s ? s.name : 'All tasks';
+  }
+  label.textContent = txt;
+}
+function renderTodoBody(){
+  todoRolloverCheck();
+  const body = document.getElementById('todoBody');
+  if(!body) return;
+  const list = todoFilteredList();
+  body.innerHTML = list.length ? list.map(todoItemHtml).join('') : ('<div class="empty-state">'+todoEmptyMsg()+'</div>');
+  wireTodoItemEvents();
+  updateTodoFilterLabel();
+}
+function wireTodoItemEvents(){
+  document.querySelectorAll('[data-tcheck]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const t = state.todos.find(function(x){ return x.id===btn.dataset.tcheck; });
+      if(!t) return;
+      const body = document.getElementById('todoBody');
+      const oldRects = {};
+      Array.prototype.forEach.call(body.children, function(el){ if(el.dataset && el.dataset.tid) oldRects[el.dataset.tid] = el.getBoundingClientRect(); });
+      t.done = !t.done;
+      t.completedAt = t.done ? Date.now() : null;
+      storageSet(STORAGE_KEYS.todos, state.todos);
+      renderTodoBody();
+      Array.prototype.forEach.call(body.children, function(el){
+        const id = el.dataset ? el.dataset.tid : null;
+        const old = id ? oldRects[id] : null;
+        if(!old) return;
+        const now = el.getBoundingClientRect();
+        const dy = old.top - now.top;
+        if(Math.abs(dy) > 1){
+          el.style.transition = 'none';
+          el.style.transform = 'translateY('+dy+'px)';
+        }
+      });
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
+          Array.prototype.forEach.call(body.children, function(el){
+            el.style.transition = 'transform 0.32s ease';
+            el.style.transform = '';
+          });
+        });
+      });
+    });
+  });
+  document.querySelectorAll('[data-tedit]').forEach(function(btn){
+    btn.addEventListener('click', function(){ openTodoTaskModal(btn.dataset.tedit); });
+  });
+}
+
+function openTodoPage(){
+  document.getElementById('todoPage').classList.add('open');
+  todoFilter = 'all';
+  renderTodoBody();
+  if(todoRefreshInterval) clearInterval(todoRefreshInterval);
+  todoRefreshInterval = setInterval(function(){ renderTodoBody(); }, 60000);
+}
+function closeTodoPage(){
+  document.getElementById('todoPage').classList.remove('open');
+  if(todoRefreshInterval){ clearInterval(todoRefreshInterval); todoRefreshInterval = null; }
+}
+function openTodoDrawer(){
+  const backdrop = document.getElementById('todoDrawerBackdrop');
+  const iconAll = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>';
+  const iconPending = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/></svg>';
+  const iconDone = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 5-5"/></svg>';
+  const iconWarn = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l10 18H2z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg>';
+  let html = '<div class="drawer" onclick="event.stopPropagation()"><h2 class="drawer-title">FILTER TASKS</h2>' +
+    '<button class="drawer-item" data-tfilter="all">'+iconAll+'All tasks</button>' +
+    '<button class="drawer-item" data-tfilter="pending">'+iconPending+'Pending</button>' +
+    '<button class="drawer-item" data-tfilter="completed">'+iconDone+'Completed</button>' +
+    '<button class="drawer-item" data-tfilter="incomplete">'+iconWarn+'Incomplete</button>';
+  if(state.subjects.length){
+    html += '<div style="height:1px; background:var(--border); margin:8px 4px;"></div>';
+    html += state.subjects.map(function(s){
+      return '<button class="drawer-item" data-tfilter="subj:'+s.id+'"><span style="width:18px; height:18px; border-radius:50%; flex:0 0 auto; background:'+s.color+'; display:inline-block;"></span>'+esc(s.name)+'</button>';
+    }).join('');
+  }
+  html += '</div>';
+  backdrop.innerHTML = html;
+  backdrop.classList.add('open');
+  backdrop.querySelectorAll('[data-tfilter]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      todoFilter = btn.dataset.tfilter;
+      closeTodoDrawer();
+      renderTodoBody();
+    });
+  });
+}
+function closeTodoDrawer(){
+  document.getElementById('todoDrawerBackdrop').classList.remove('open');
+}
+
+function openTodoTaskModal(editId){
+  todoEditingId = editId || null;
+  const existing = editId ? state.todos.find(function(x){ return x.id===editId; }) : null;
+  const text = existing ? existing.text : '';
+  const subjectId = existing ? (existing.subjectId || '') : '';
+  const endTime = existing ? (existing.endTime || '') : '';
+  const todayOnly = existing ? !!existing.todayOnly : false;
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'w-modal-backdrop';
+  backdrop.id = 'todoModalBackdrop';
+  backdrop.innerHTML =
+    '<div class="w-modal-card" onclick="event.stopPropagation()">' +
+      '<h3>'+(existing?'Edit task':'Add task')+'</h3>' +
+      '<div class="w-field-label" style="margin-top:14px;">Task</div>' +
+      '<input type="text" class="w-input" id="tTaskText" placeholder="What do you need to do?" value="'+esc(text)+'" maxlength="140">' +
+      '<div class="w-field-label">Subject <span style="text-transform:none; color:var(--text-3); letter-spacing:0;">(optional)</span></div>' +
+      '<div class="chip-row" id="tSubjRow">' +
+        '<button type="button" class="chip '+(!subjectId?'active':'')+'" data-subj="">No subject</button>' +
+        state.subjects.map(function(s){
+          return '<button type="button" class="chip '+(subjectId===s.id?'active':'')+'" style="--dot-color:'+s.color+'" data-subj="'+s.id+'"><span class="dot" style="background:'+s.color+'"></span>'+esc(s.name)+'</button>';
+        }).join('') +
+      '</div>' +
+      '<div class="w-field-label">End time <span style="text-transform:none; color:var(--text-3); letter-spacing:0;">(optional)</span></div>' +
+      '<input type="time" class="w-input" id="tEndTime" value="'+endTime+'">' +
+      '<div class="w-field-label">Only for today</div>' +
+      '<div class="notif-row"><span style="font-size:11.5px; color:var(--text-3); max-width:190px;">Clears automatically after midnight if not done</span>' +
+        '<button type="button" class="btn btn-ghost" id="tTodayOnlyBtn" data-on="'+(todayOnly?'1':'0')+'" style="font-size:12px; padding:7px 14px; flex:0 0 auto;">'+(todayOnly?'On':'Off')+'</button></div>' +
+      '<div class="w-modal-actions">' +
+        '<button class="btn btn-ghost" id="tModalCancel">Cancel</button>' +
+        '<button class="btn btn-primary" id="tModalSave">Save</button>' +
+      '</div>' +
+      (existing ? '<button class="btn btn-danger" id="tModalDelete" style="width:100%; margin-top:10px;">Delete task</button>' : '') +
+    '</div>';
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', function(e){ if(e.target===backdrop) closeTodoTaskModal(); });
+  document.querySelectorAll('#tSubjRow .chip').forEach(function(c){
+    c.addEventListener('click', function(){
+      document.querySelectorAll('#tSubjRow .chip').forEach(function(x){ x.classList.remove('active'); });
+      c.classList.add('active');
+    });
+  });
+  document.getElementById('tTodayOnlyBtn').addEventListener('click', function(){
+    const b = document.getElementById('tTodayOnlyBtn');
+    const on = b.dataset.on === '1';
+    b.dataset.on = on ? '0' : '1';
+    b.textContent = on ? 'Off' : 'On';
+  });
+  document.getElementById('tTaskText').addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); saveTodoTaskModal(); } });
+  document.getElementById('tModalCancel').addEventListener('click', closeTodoTaskModal);
+  document.getElementById('tModalSave').addEventListener('click', saveTodoTaskModal);
+  if(existing){
+    document.getElementById('tModalDelete').addEventListener('click', function(){
+      const btn = document.getElementById('tModalDelete');
+      if(btn.dataset.confirming !== '1'){
+        btn.dataset.confirming = '1';
+        btn.textContent = 'Tap again to delete';
+        clearTimeout(btn._tt);
+        btn._tt = setTimeout(function(){ btn.dataset.confirming='0'; btn.textContent='Delete task'; }, 4000);
+        return;
+      }
+      const idx = state.todos.findIndex(function(x){ return x.id===existing.id; });
+      const removed = state.todos[idx];
+      state.todos = state.todos.filter(function(x){ return x.id!==existing.id; });
+      storageSet(STORAGE_KEYS.todos, state.todos);
+      closeTodoTaskModal();
+      renderTodoBody();
+      showUndoToast('Task deleted.', function(){
+        state.todos.splice(idx, 0, removed);
+        storageSet(STORAGE_KEYS.todos, state.todos);
+        renderTodoBody();
+      });
+    });
+  }
+  setTimeout(function(){ const el = document.getElementById('tTaskText'); if(el) el.focus(); }, 50);
+}
+function closeTodoTaskModal(){
+  const b = document.getElementById('todoModalBackdrop');
+  if(b) b.remove();
+  todoEditingId = null;
+}
+function saveTodoTaskModal(){
+  const text = document.getElementById('tTaskText').value.trim();
+  if(!text){ showToast('Give the task some text', 2500); return; }
+  const selChip = document.querySelector('#tSubjRow .chip.active');
+  const subjectId = (selChip && selChip.dataset.subj) ? selChip.dataset.subj : null;
+  const endTimeVal = document.getElementById('tEndTime').value || null;
+  const todayOnly = document.getElementById('tTodayOnlyBtn').dataset.on === '1';
+  if(todoEditingId){
+    const t = state.todos.find(function(x){ return x.id===todoEditingId; });
+    if(t){
+      t.text = text; t.subjectId = subjectId; t.endTime = endTimeVal; t.todayOnly = todayOnly;
+      if(todayOnly && !t.createdDate) t.createdDate = todayStr();
+      if(!todayOnly) t.archivedIncomplete = false;
+    }
+  } else {
+    state.todos.push({
+      id: 'td'+Date.now(), text: text, done: false,
+      subjectId: subjectId, endTime: endTimeVal, todayOnly: todayOnly,
+      createdDate: todayStr(), archivedIncomplete: false, completedAt: null
+    });
+  }
+  storageSet(STORAGE_KEYS.todos, state.todos);
+  closeTodoTaskModal();
+  todoFilter = 'all';
+  renderTodoBody();
 }
 
 
