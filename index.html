@@ -23,6 +23,7 @@
     --accent:#E8A33D; --accent-dim:#3A2F1E;
     --success:#7FA875; --success-dim:#20281E;
     --danger:#D9705B; --danger-dim:#2E1E1B;
+    --winter-accent:#7EC9E8; --winter-accent-2:#BFE8FA;
     --radius:10px;
   }
   *{box-sizing:border-box;}
@@ -451,6 +452,100 @@
   .tab-item svg{width:19px; height:19px;}
 
   .loading{display:flex; flex-direction:column; align-items:center; justify-content:center; height:60vh; color:var(--text-3); font-size:13px; font-family:'IBM Plex Mono',monospace;}
+
+  /* ================= WINTER ARC ================= */
+  .w-page{position:fixed; inset:0; z-index:200; background:var(--bg); display:none; overflow-y:auto; -webkit-overflow-scrolling:touch;}
+  .w-page.open{display:block;}
+  .w-shell{max-width:440px; margin:0 auto; min-height:100%; position:relative;}
+  .w-header{display:flex; align-items:center; gap:10px; padding:20px 20px 16px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg); z-index:2;}
+  .w-back-btn{background:var(--surface); border:1px solid var(--border-strong); border-radius:8px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-2); flex:0 0 auto;}
+  .w-back-btn svg{width:18px; height:18px;}
+  .w-header-title{flex:1; text-align:center;}
+  .w-brand{font-family:'Bitter',serif; font-weight:700; font-size:15px; letter-spacing:2px; color:var(--text);}
+  .w-brand span{color:var(--winter-accent);}
+  .w-brand-sub{font-size:10.5px; color:var(--text-3); letter-spacing:1px; margin-top:2px;}
+  .w-header-spacer{width:34px; flex:0 0 auto;}
+  .w-body{padding:20px 20px 110px;}
+
+  .w-tabs.period-row{margin-bottom:18px;}
+  .w-tabs .period-btn.active{background:var(--winter-accent); color:#0B222B;}
+
+  .w-ring-card{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 16px; margin-bottom:18px; display:flex; align-items:center; gap:16px;}
+  .w-ring-wrap{position:relative; width:92px; height:92px; flex:0 0 auto;}
+  .w-ring-wrap svg{width:100%; height:100%;}
+  .w-ring-center{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Bitter',serif; font-weight:700; font-size:18px;}
+  .w-ring-info .w-ring-title{font-size:14px; font-weight:600; margin-bottom:3px;}
+  .w-ring-info .w-ring-sub{font-size:12px; color:var(--text-2);}
+
+  .w-month-pills{display:flex; gap:8px; margin-bottom:16px;}
+  .w-month-pill{flex:1; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--text-2); font-size:12.5px; padding:9px 0; border-radius:20px; cursor:pointer; font-family:'Inter'; font-weight:500;}
+  .w-month-pill.active{background:var(--winter-accent); color:#0B222B; border-color:var(--winter-accent); font-weight:700;}
+
+  .w-card{background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--w-color, var(--winter-accent)); border-radius:12px; padding:16px; margin-bottom:14px;}
+  .w-card-top{display:flex; align-items:center; gap:10px;}
+  .w-icon{width:40px; height:40px; border-radius:10px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:19px; flex:0 0 auto;}
+  .w-card-info{flex:1; min-width:0;}
+  .w-name{font-size:14.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .w-streak{font-size:11.5px; color:var(--text-2); margin-top:2px;}
+  .w-icon-btn{background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text-2); border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:0 0 auto;}
+  .w-icon-btn svg{width:14px; height:14px;}
+  .w-check-btn{background:var(--surface-2); border:1px solid var(--border-strong); color:var(--w-color, var(--winter-accent)); border-radius:50%; width:38px; height:38px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:0 0 auto; margin-left:2px;}
+  .w-check-btn svg{width:18px; height:18px;}
+  .w-check-btn.done{background:var(--w-color, var(--winter-accent)); border-color:var(--w-color, var(--winter-accent)); color:#0B0C10;}
+  .w-day-labels{display:flex; gap:6px; margin-top:12px;}
+  .w-day-labels span{flex:1; text-align:center; font-size:9.5px; color:var(--text-3);}
+  .w-day-row{display:flex; gap:6px; margin-top:4px;}
+  .w-day{flex:1; aspect-ratio:1; border-radius:8px; background:var(--surface-3); border:1px solid var(--border-strong); cursor:pointer; padding:0;}
+  .w-day.done{background:var(--w-color, var(--winter-accent)); border-color:var(--w-color, var(--winter-accent));}
+  .w-day.is-today{box-shadow:0 0 0 2px var(--text);}
+  .w-day.off{opacity:0.3; cursor:default;}
+
+  .w-month-card-head{display:flex; align-items:center; gap:10px;}
+  .w-sched-label{font-size:11px; color:var(--text-3); flex:0 0 auto; white-space:nowrap;}
+  .w-cal-headers{display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin:12px 0 5px;}
+  .w-cal-headers span{text-align:center; font-size:9.5px; color:var(--text-3);}
+  .w-cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:5px;}
+  .w-arc-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(15px,1fr)); gap:4px; margin-top:12px;}
+  .w-cal-cell{aspect-ratio:1; border-radius:5px; background:var(--surface-3); border:1px solid var(--border-strong); cursor:pointer; padding:0;}
+  .w-cal-cell.blank{visibility:hidden; cursor:default;}
+  .w-cal-cell.done{background:var(--w-color,var(--winter-accent)); border-color:var(--w-color,var(--winter-accent));}
+  .w-cal-cell.today{box-shadow:0 0 0 2px var(--text);}
+  .w-cal-cell.off{opacity:0.3; cursor:default;}
+
+  .w-notes-card .w-field-label:first-of-type{margin-top:0;}
+  .w-textarea{min-height:58px; resize:vertical; line-height:1.5;}
+
+  .w-fab{position:fixed; right:20px; bottom:26px; width:56px; height:56px; border-radius:50%; background:var(--winter-accent); color:#0B222B; border:none; font-size:26px; font-weight:600; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:206; box-shadow:0 8px 20px rgba(0,0,0,0.5);}
+
+  .w-modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:220; padding:24px;}
+  .w-modal-card{background:var(--surface); border:1px solid var(--border-strong); border-radius:16px; padding:22px 20px; max-width:340px; width:100%; max-height:85vh; overflow-y:auto;}
+  .w-modal-card h3{font-family:'Bitter',serif; font-size:16px; margin:0;}
+  .w-field-label{font-size:11px; color:var(--text-3); margin:14px 0 6px; text-transform:uppercase; letter-spacing:0.5px;}
+  .w-input{width:100%; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text); border-radius:8px; padding:10px 11px; font-family:'Inter'; font-size:13.5px;}
+  .w-icon-grid{display:flex; flex-wrap:wrap; gap:8px;}
+  .w-icon-opt{width:38px; height:38px; border-radius:10px; background:var(--surface-2); border:1.5px solid var(--border-strong); font-size:17px; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .w-icon-opt.sel{border-color:var(--winter-accent); background:var(--surface-3);}
+  .w-modal-actions{display:flex; gap:10px; margin-top:22px;}
+  .w-modal-actions .btn{flex:1;}
+
+  .w-soon-wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20vh 24px 40px; min-height:70vh;}
+  .w-soon-flake{font-size:50px; color:var(--winter-accent); animation:w-flake-spin 7s linear infinite, w-flake-bob 2.6s ease-in-out infinite;}
+  @keyframes w-flake-spin{from{transform:rotate(0deg);} to{transform:rotate(360deg);}}
+  @keyframes w-flake-bob{0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);}}
+  .w-soon-text{
+    font-family:'Bitter',serif; font-weight:700; font-size:29px; margin-top:20px;
+    background:linear-gradient(90deg, var(--text-3) 0%, var(--winter-accent) 50%, var(--text-3) 100%);
+    background-size:200% auto; -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:sig-shimmer 3.2s ease-in-out infinite;
+  }
+  .w-dots span{opacity:0; animation:w-dot-fade 1.4s infinite;}
+  .w-dots span:nth-child(2){animation-delay:0.2s;}
+  .w-dots span:nth-child(3){animation-delay:0.4s;}
+  @keyframes w-dot-fade{0%,80%,100%{opacity:0;} 40%{opacity:1;}}
+  .w-soon-range{font-family:'IBM Plex Mono',monospace; letter-spacing:5px; color:var(--text-2); margin-top:10px; font-size:13px;}
+  .w-soon-count{margin-top:20px; font-size:13.5px; color:var(--text-2);}
+  .w-soon-count b{color:var(--winter-accent); font-family:'IBM Plex Mono',monospace; font-size:17px;}
+  .w-soon-desc{margin-top:14px; font-size:12.5px; color:var(--text-3); max-width:270px; line-height:1.6;}
 </style>
 </head>
 <body>
@@ -461,7 +556,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const STORAGE_KEYS = { subjects:'subjects', sessions:'sessions', settings:'settings', events:'events', lastPopup:'lastPopup', activeTimer:'activeTimer', busyBlocks:'busyBlocks', todos:'todos', achievements:'achievements' };
+const STORAGE_KEYS = { subjects:'subjects', sessions:'sessions', settings:'settings', events:'events', lastPopup:'lastPopup', activeTimer:'activeTimer', busyBlocks:'busyBlocks', todos:'todos', achievements:'achievements', winterTargets:'winterTargets', winterLogs:'winterLogs', winterNotes:'winterNotes' };
 const DEFAULT_SUBJECTS = [
   {id:'math', name:'Math', color:'#5B7FA6'},
   {id:'chem', name:'Chemistry', color:'#C97A56'},
@@ -474,7 +569,7 @@ const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const TOTAL_HOUR_MILESTONES = [1,3,5,10,15,25,50,75,100,150,200,250,400,500,750,1000];
 const DAILY_HOUR_MILESTONES = [6,7,8,9,10,12];
 
-let state = { subjects: [], sessions: [], settings: {...DEFAULT_SETTINGS}, events: [], busyBlocks: [], todos: [], achievements: {total:{}, daily:{}} };
+let state = { subjects: [], sessions: [], settings: {...DEFAULT_SETTINGS}, events: [], busyBlocks: [], todos: [], achievements: {total:{}, daily:{}}, winterTargets: [], winterLogs: {}, winterNotes: {} };
 let activeSubjectId = null;
 let activeTab = 'track';
 let activePeriod = 'day';
@@ -644,6 +739,9 @@ function init(){
   state.busyBlocks = storageGet(STORAGE_KEYS.busyBlocks, []);
   state.todos = storageGet(STORAGE_KEYS.todos, []);
   state.achievements = storageGet(STORAGE_KEYS.achievements, {total:{}, daily:{}});
+  state.winterTargets = storageGet(STORAGE_KEYS.winterTargets, []);
+  state.winterLogs = storageGet(STORAGE_KEYS.winterLogs, {});
+  state.winterNotes = storageGet(STORAGE_KEYS.winterNotes, {});
   backfillAchievements();
   timer.mode = state.settings.timerMode || 'stopwatch';
   activeSubjectId = null;
@@ -726,6 +824,7 @@ function buildShell(){
       '<div class="drawer" onclick="event.stopPropagation()">' +
         '<h2 class="drawer-title">STUDY LOG</h2>' +
         '<button class="drawer-item" id="drawerTodoBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>To-do list</button>' +
+        '<button class="drawer-item" id="drawerWinterBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2v20M4.9 6.5l14.2 11M19.1 6.5L4.9 17.5"/></svg>Winter Arc</button>' +
         '<button class="drawer-item" id="drawerAchBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L7 21l5-2.5L17 21l-1.5-8.5"/></svg>Your Achievements</button>' +
         '<button class="drawer-item" id="drawerAvgBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9h-9z"/></svg>Study Averages</button>' +
         '<button class="drawer-item" id="drawerGoalsBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 12l2 2 4-4"/></svg>Daily Goals</button>' +
@@ -734,6 +833,7 @@ function buildShell(){
     document.body.appendChild(drawerBackdrop);
     drawerBackdrop.addEventListener('click', closeDrawer);
     document.getElementById('drawerTodoBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('todo'); });
+    document.getElementById('drawerWinterBtn').addEventListener('click', function(){ closeDrawer(); openWinterArcPage(); });
     document.getElementById('drawerAchBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('achievements'); });
     document.getElementById('drawerAvgBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('averages'); });
     document.getElementById('drawerGoalsBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('goals'); });
@@ -748,6 +848,25 @@ function buildShell(){
     overlayBackdrop.addEventListener('click', function(e){ if(e.target===overlayBackdrop) closeOverlay(); });
   }
   document.getElementById('menuBtn').addEventListener('click', openDrawer);
+
+  if(!document.getElementById('winterArcPage')){
+    const wPage = document.createElement('div');
+    wPage.className = 'w-page';
+    wPage.id = 'winterArcPage';
+    wPage.innerHTML =
+      '<div class="w-shell">' +
+        '<div class="w-header">' +
+          '<button class="w-back-btn" id="winterBackBtn" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 18l-6-6 6-6"/></svg></button>' +
+          '<div class="w-header-title"><div class="w-brand">WINTER <span>ARC</span></div><div class="w-brand-sub">\u2744 OCT - DEC</div></div>' +
+          '<div class="w-header-spacer"></div>' +
+        '</div>' +
+        '<div class="w-body" id="winterArcBody"></div>' +
+        '<button class="w-fab" id="winterAddBtn">+</button>' +
+      '</div>';
+    document.body.appendChild(wPage);
+    document.getElementById('winterBackBtn').addEventListener('click', closeWinterArcPage);
+    document.getElementById('winterAddBtn').addEventListener('click', function(){ openWinterTargetModal(null); });
+  }
 }
 
 function openDrawer(){ document.getElementById('drawerBackdrop').classList.add('open'); }
@@ -2803,6 +2922,423 @@ function renderLog(){
     renderLog();
   });
 }
+
+
+/* ================= WINTER ARC ================= */
+const WINTER_ICONS = ['\u2600\uFE0F','\uD83C\uDFCB\uFE0F','\uD83E\uDDD8','\uD83D\uDCDA','\uD83D\uDCA7','\uD83C\uDFC3','\uD83E\uDD57','\uD83D\uDE34','\u270D\uFE0F','\uD83C\uDFAF','\uD83E\uDDCA','\uD83D\uDE4F'];
+let winterTab = 'today';
+let winterMonthIdx = null;
+let winterEditingId = null;
+
+function winterArcWindow(){
+  const y = new Date().getFullYear();
+  return { start:new Date(y,9,1,0,0,0,0), end:new Date(y,11,31,23,59,59,999), year:y };
+}
+function isWinterArcLive(){
+  const w = winterArcWindow(); const now = new Date();
+  return now>=w.start && now<=w.end;
+}
+function winterDaysToStart(){
+  const w = winterArcWindow(); const now = new Date();
+  return Math.max(0, Math.ceil((w.start - now)/86400000));
+}
+function winterIsScheduled(t, ds){
+  return t.days.indexOf(parseLocalDate(ds).getDay())!==-1;
+}
+function winterIsDone(t, ds){
+  return !!(state.winterLogs[t.id] && state.winterLogs[t.id][ds]);
+}
+function winterToggle(targetId, ds){
+  if(!state.winterLogs[targetId]) state.winterLogs[targetId] = {};
+  if(state.winterLogs[targetId][ds]) delete state.winterLogs[targetId][ds];
+  else state.winterLogs[targetId][ds] = true;
+  storageSet(STORAGE_KEYS.winterLogs, state.winterLogs);
+}
+function winterStreak(t){
+  const w = winterArcWindow();
+  let streak = 0;
+  const ds0 = todayStr();
+  if(winterIsScheduled(t, ds0) && winterIsDone(t, ds0)) streak++;
+  let cur = new Date();
+  cur.setDate(cur.getDate()-1);
+  while(cur >= w.start){
+    const ds = fmtDate(cur);
+    if(winterIsScheduled(t, ds)){
+      if(winterIsDone(t, ds)) streak++; else break;
+    }
+    cur.setDate(cur.getDate()-1);
+  }
+  return streak;
+}
+function winterSchedLabel(t){
+  if(t.days.length===7) return 'Everyday';
+  if(!t.days.length) return 'Never';
+  return t.days.slice().sort().map(function(i){ return DAY_NAMES[i].slice(0,2); }).join(', ');
+}
+function winterCountRange(startDs, endDs){
+  const start = parseLocalDate(startDs), end = parseLocalDate(endDs);
+  let scheduled=0, done=0;
+  state.winterTargets.forEach(function(t){
+    let cur = new Date(start);
+    while(cur<=end){
+      const ds = fmtDate(cur);
+      if(winterIsScheduled(t, ds)){
+        scheduled++;
+        if(winterIsDone(t, ds)) done++;
+      }
+      cur.setDate(cur.getDate()+1);
+    }
+  });
+  return { scheduled: scheduled, done: done };
+}
+function winterMonthKey(){
+  const w = winterArcWindow();
+  return w.year + '-' + pad(winterMonthIdx+1);
+}
+function winterRingSvg(pct, size, color){
+  size = size || 92;
+  const r = size/2 - 9;
+  const c = 2*Math.PI*r;
+  const clamped = Math.max(0, Math.min(100, pct));
+  const off = c - (clamped/100)*c;
+  return '<svg viewBox="0 0 '+size+' '+size+'">' +
+    '<circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="var(--surface-3)" stroke-width="8"/>' +
+    '<circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="8" stroke-linecap="round" ' +
+      'stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 '+(size/2)+' '+(size/2)+')"/>' +
+  '</svg>';
+}
+
+function openWinterArcPage(){
+  document.getElementById('winterArcPage').classList.add('open');
+  const nowMonth = new Date().getMonth();
+  winterMonthIdx = (nowMonth>=9 && nowMonth<=11) ? nowMonth : 9;
+  winterTab = 'today';
+  renderWinterArc();
+}
+function closeWinterArcPage(){
+  document.getElementById('winterArcPage').classList.remove('open');
+}
+
+function renderWinterArc(){
+  const body = document.getElementById('winterArcBody');
+  const fab = document.getElementById('winterAddBtn');
+  const live = isWinterArcLive();
+  if(fab) fab.style.display = live ? 'flex' : 'none';
+  if(!live){
+    const days = winterDaysToStart();
+    body.innerHTML =
+      '<div class="w-soon-wrap">' +
+        '<div class="w-soon-flake">\u2744</div>' +
+        '<div class="w-soon-text">Coming Soon<span class="w-dots"><span>.</span><span>.</span><span>.</span></span></div>' +
+        '<div class="w-soon-range">OCT - DEC</div>' +
+        '<div class="w-soon-count">Starts in <b>' + days + '</b> day' + (days===1?'':'s') + '</div>' +
+        '<p class="w-soon-desc">The Winter Arc challenge runs October 1st through December 31st. Come back once it starts to add targets and start tracking.</p>' +
+      '</div>';
+    return;
+  }
+  body.innerHTML =
+    '<div class="period-row w-tabs">' +
+      ['today','week','month','arc'].map(function(k){
+        const lbl = k==='today'?'Today':k==='week'?'Week':k==='month'?'Month':'Arc';
+        return '<button class="period-btn '+(winterTab===k?'active':'')+'" data-wtab="'+k+'">'+lbl+'</button>';
+      }).join('') +
+    '</div>' +
+    '<div id="winterTabContent"></div>';
+  document.querySelectorAll('[data-wtab]').forEach(function(btn){
+    btn.addEventListener('click', function(){ winterTab = btn.dataset.wtab; renderWinterTabContent(); updateWinterTabButtons(); });
+  });
+  renderWinterTabContent();
+}
+function updateWinterTabButtons(){
+  document.querySelectorAll('[data-wtab]').forEach(function(b){ b.classList.toggle('active', b.dataset.wtab===winterTab); });
+}
+
+function winterEmptyState(){
+  return '<div class="empty-state">No targets yet.<br>Tap the + button to add your first Winter Arc target.</div>';
+}
+function winterRingCardHtml(pct, title, sub){
+  return '<div class="w-ring-card">' +
+    '<div class="w-ring-wrap">' + winterRingSvg(pct, 92, 'var(--winter-accent)') +
+      '<div class="w-ring-center">'+pct+'%</div>' +
+    '</div>' +
+    '<div class="w-ring-info"><div class="w-ring-title">'+esc(title)+'</div><div class="w-ring-sub">'+esc(sub)+'</div></div>' +
+  '</div>';
+}
+function winterEditIconSvg(){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+}
+function winterCardHtml(t){
+  const streak = winterStreak(t);
+  const ds0 = todayStr();
+  const doneToday = winterIsDone(t, ds0);
+  const now = new Date();
+  const sun = new Date(now); sun.setDate(now.getDate()-now.getDay());
+  let days = '', labels = '';
+  for(let i=0;i<7;i++){
+    const d = new Date(sun); d.setDate(sun.getDate()+i);
+    const ds = fmtDate(d);
+    const done = winterIsDone(t, ds);
+    const sched = winterIsScheduled(t, ds);
+    const isToday = ds===ds0;
+    labels += '<span>'+DAY_NAMES[i][0]+'</span>';
+    days += '<button class="w-day '+(done?'done':'')+' '+(isToday?'is-today':'')+' '+(!sched?'off':'')+'" style="--w-color:'+t.color+'" data-wcheck="'+t.id+'" data-wdate="'+ds+'"'+(!sched?' disabled':'')+'></button>';
+  }
+  return '<div class="w-card" style="--w-color:'+t.color+'">' +
+    '<div class="w-card-top">' +
+      '<div class="w-icon">'+t.icon+'</div>' +
+      '<div class="w-card-info"><div class="w-name">'+esc(t.name)+'</div><div class="w-streak">\uD83D\uDD25 '+streak+' Day'+(streak===1?'':'s')+'</div></div>' +
+      '<button class="w-icon-btn" data-wedit="'+t.id+'">'+winterEditIconSvg()+'</button>' +
+      '<button class="w-check-btn '+(doneToday?'done':'')+'" style="--w-color:'+t.color+'" data-wcheck="'+t.id+'" data-wdate="'+ds0+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 13l4 4L19 7"/></svg></button>' +
+    '</div>' +
+    '<div class="w-day-labels">'+labels+'</div>' +
+    '<div class="w-day-row">'+days+'</div>' +
+  '</div>';
+}
+function winterTodayHtml(targets){
+  const ds = todayStr();
+  const c = winterCountRange(ds, ds);
+  const pct = c.scheduled>0 ? Math.round((c.done/c.scheduled)*100) : 0;
+  let html = winterRingCardHtml(pct, "Today's progress", c.done+' of '+c.scheduled+' scheduled');
+  if(!targets.length) return html + winterEmptyState();
+  targets.forEach(function(t){ html += winterCardHtml(t); });
+  return html;
+}
+function winterWeekHtml(targets){
+  const now = new Date();
+  const sun = new Date(now); sun.setDate(now.getDate()-now.getDay());
+  const sat = new Date(sun); sat.setDate(sun.getDate()+6);
+  const c = winterCountRange(fmtDate(sun), fmtDate(sat));
+  const pct = c.scheduled>0 ? Math.round((c.done/c.scheduled)*100) : 0;
+  let html = winterRingCardHtml(pct, "This week's progress", c.done+' of '+c.scheduled+' scheduled');
+  if(!targets.length) return html + winterEmptyState();
+  targets.forEach(function(t){ html += winterCardHtml(t); });
+  return html;
+}
+function winterNotesCardHtml(monthLabel){
+  const key = winterMonthKey();
+  const notes = state.winterNotes[key] || {};
+  return '<div class="w-card w-notes-card">' +
+    '<p class="section-label" style="margin-bottom:2px;">'+esc(monthLabel)+' reflection</p>' +
+    '<div class="w-field-label">My monthly goal</div>' +
+    '<textarea class="w-input w-textarea" data-wnote="goal" placeholder="What are you working toward?">'+esc(notes.goal||'')+'</textarea>' +
+    '<div class="w-field-label">What I have achieved</div>' +
+    '<textarea class="w-input w-textarea" data-wnote="achieved" placeholder="Wins so far...">'+esc(notes.achieved||'')+'</textarea>' +
+    '<div class="w-field-label">What I should improve</div>' +
+    '<textarea class="w-input w-textarea" data-wnote="improve" placeholder="What could go better...">'+esc(notes.improve||'')+'</textarea>' +
+  '</div>';
+}
+function winterMonthHtml(targets){
+  const w = winterArcWindow();
+  const monthNames = ['October','November','December'];
+  const idx = winterMonthIdx;
+  const monthStart = fmtDate(new Date(w.year, idx, 1));
+  const monthEnd = fmtDate(new Date(w.year, idx+1, 0));
+  const c = winterCountRange(monthStart, monthEnd);
+  const pct = c.scheduled>0 ? Math.round((c.done/c.scheduled)*100) : 0;
+  let html = winterRingCardHtml(pct, monthNames[idx-9]+' progress', c.done+' of '+c.scheduled+' scheduled');
+  html += '<div class="w-month-pills">' +
+    [9,10,11].map(function(m){
+      return '<button class="w-month-pill '+(idx===m?'active':'')+'" data-wmonth="'+m+'">'+monthNames[m-9].slice(0,3)+'</button>';
+    }).join('') + '</div>';
+  if(targets.length){
+    const daysInMonth = new Date(w.year, idx+1, 0).getDate();
+    const firstDow = new Date(w.year, idx, 1).getDay();
+    const todayDs = todayStr();
+    targets.forEach(function(t){
+      const streak = winterStreak(t);
+      let cells = '';
+      for(let i=0;i<firstDow;i++) cells += '<button class="w-cal-cell blank"></button>';
+      for(let day=1; day<=daysInMonth; day++){
+        const ds = w.year+'-'+pad(idx+1)+'-'+pad(day);
+        const done = winterIsDone(t, ds);
+        const sched = winterIsScheduled(t, ds);
+        const isToday = ds===todayDs;
+        cells += '<button class="w-cal-cell '+(done?'done':'')+' '+(isToday?'today':'')+' '+(!sched?'off':'')+'" style="--w-color:'+t.color+'" data-wcheck="'+t.id+'" data-wdate="'+ds+'"'+(!sched?' disabled':'')+'></button>';
+      }
+      html += '<div class="w-card" style="--w-color:'+t.color+'">' +
+        '<div class="w-month-card-head">' +
+          '<div class="w-icon">'+t.icon+'</div>' +
+          '<div class="w-card-info"><div class="w-name">'+esc(t.name)+'</div><div class="w-streak">\uD83D\uDD25 '+streak+' Day'+(streak===1?'':'s')+'</div></div>' +
+          '<button class="w-icon-btn" data-wedit="'+t.id+'">'+winterEditIconSvg()+'</button>' +
+          '<span class="w-sched-label">'+winterSchedLabel(t)+'</span>' +
+        '</div>' +
+        '<div class="w-cal-headers">'+['S','M','T','W','T','F','S'].map(function(d){return '<span>'+d+'</span>';}).join('')+'</div>' +
+        '<div class="w-cal-grid">'+cells+'</div>' +
+      '</div>';
+    });
+  } else {
+    html += winterEmptyState();
+  }
+  html += winterNotesCardHtml(monthNames[idx-9]);
+  return html;
+}
+function winterArcTabHtml(targets){
+  const w = winterArcWindow();
+  const startDs = fmtDate(w.start), endDs = fmtDate(w.end);
+  const c = winterCountRange(startDs, endDs);
+  const pct = c.scheduled>0 ? Math.round((c.done/c.scheduled)*100) : 0;
+  let html = winterRingCardHtml(pct, 'Winter Arc (Oct - Dec)', c.done+' of '+c.scheduled+' scheduled');
+  if(!targets.length) return html + winterEmptyState();
+  const todayDs = todayStr();
+  targets.forEach(function(t){
+    const streak = winterStreak(t);
+    let cells = '';
+    let cur = new Date(w.start);
+    while(cur<=w.end){
+      const ds = fmtDate(cur);
+      const done = winterIsDone(t, ds);
+      const sched = winterIsScheduled(t, ds);
+      const isToday = ds===todayDs;
+      cells += '<button class="w-cal-cell '+(done?'done':'')+' '+(isToday?'today':'')+' '+(!sched?'off':'')+'" style="--w-color:'+t.color+'" data-wcheck="'+t.id+'" data-wdate="'+ds+'"'+(!sched?' disabled':'')+'></button>';
+      cur.setDate(cur.getDate()+1);
+    }
+    html += '<div class="w-card" style="--w-color:'+t.color+'">' +
+      '<div class="w-month-card-head">' +
+        '<div class="w-icon">'+t.icon+'</div>' +
+        '<div class="w-card-info"><div class="w-name">'+esc(t.name)+'</div><div class="w-streak">\uD83D\uDD25 '+streak+' Day'+(streak===1?'':'s')+'</div></div>' +
+        '<button class="w-icon-btn" data-wedit="'+t.id+'">'+winterEditIconSvg()+'</button>' +
+        '<span class="w-sched-label">'+winterSchedLabel(t)+'</span>' +
+      '</div>' +
+      '<div class="w-arc-grid">'+cells+'</div>' +
+    '</div>';
+  });
+  return html;
+}
+function renderWinterTabContent(){
+  const el = document.getElementById('winterTabContent');
+  if(!el) return;
+  const targets = state.winterTargets;
+  if(winterTab==='today') el.innerHTML = winterTodayHtml(targets);
+  else if(winterTab==='week') el.innerHTML = winterWeekHtml(targets);
+  else if(winterTab==='month') el.innerHTML = winterMonthHtml(targets);
+  else el.innerHTML = winterArcTabHtml(targets);
+  wireWinterContentEvents();
+}
+function wireWinterContentEvents(){
+  document.querySelectorAll('[data-wmonth]').forEach(function(btn){
+    btn.addEventListener('click', function(){ winterMonthIdx = parseInt(btn.dataset.wmonth,10); renderWinterTabContent(); });
+  });
+  document.querySelectorAll('[data-wcheck]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      if(btn.disabled) return;
+      winterToggle(btn.dataset.wcheck, btn.dataset.wdate);
+      renderWinterTabContent();
+    });
+  });
+  document.querySelectorAll('[data-wedit]').forEach(function(btn){
+    btn.addEventListener('click', function(){ openWinterTargetModal(btn.dataset.wedit); });
+  });
+  document.querySelectorAll('[data-wnote]').forEach(function(ta){
+    ta.addEventListener('change', function(){
+      const key = winterMonthKey();
+      if(!state.winterNotes[key]) state.winterNotes[key] = {};
+      state.winterNotes[key][ta.dataset.wnote] = ta.value;
+      storageSet(STORAGE_KEYS.winterNotes, state.winterNotes);
+    });
+  });
+}
+
+/* ---- add / edit target modal ---- */
+function openWinterTargetModal(editId){
+  winterEditingId = editId || null;
+  const existing = editId ? state.winterTargets.find(function(x){ return x.id===editId; }) : null;
+  const name = existing ? existing.name : '';
+  const icon = existing ? existing.icon : WINTER_ICONS[0];
+  const color = existing ? existing.color : SWATCH_COLORS[0];
+  const days = existing ? existing.days.slice() : [0,1,2,3,4,5,6];
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'w-modal-backdrop';
+  backdrop.id = 'winterModalBackdrop';
+  backdrop.innerHTML =
+    '<div class="w-modal-card" onclick="event.stopPropagation()">' +
+      '<h3>'+(existing?'Edit target':'Add target')+'</h3>' +
+      '<div class="w-field-label" style="margin-top:14px;">Name</div>' +
+      '<input type="text" class="w-input" id="wTargetName" placeholder="e.g. Wake early" value="'+esc(name)+'" maxlength="40">' +
+      '<div class="w-field-label">Icon</div>' +
+      '<div class="w-icon-grid" id="wIconGrid">' +
+        WINTER_ICONS.map(function(ic){ return '<button type="button" class="w-icon-opt '+(ic===icon?'sel':'')+'" data-icon="'+ic+'">'+ic+'</button>'; }).join('') +
+      '</div>' +
+      '<div class="w-field-label">Color</div>' +
+      '<div class="swatches" id="wColorGrid">' +
+        SWATCH_COLORS.map(function(c){ return '<div class="swatch '+(c===color?'sel':'')+'" data-color="'+c+'" style="background:'+c+'"></div>'; }).join('') +
+      '</div>' +
+      '<div class="w-field-label">Schedule</div>' +
+      '<div class="day-toggle-row" id="wDayGrid">' +
+        DAY_NAMES.map(function(d,i){ return '<button type="button" class="day-toggle '+(days.indexOf(i)!==-1?'active':'')+'" data-day="'+i+'">'+d.slice(0,2)+'</button>'; }).join('') +
+      '</div>' +
+      '<div class="w-modal-actions">' +
+        '<button class="btn btn-ghost" id="wModalCancel">Cancel</button>' +
+        '<button class="btn btn-primary" id="wModalSave">Save</button>' +
+      '</div>' +
+      (existing ? '<button class="btn btn-danger" id="wModalDelete" style="width:100%; margin-top:10px;">Delete target</button>' : '') +
+    '</div>';
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', function(e){ if(e.target===backdrop) closeWinterTargetModal(); });
+
+  document.querySelectorAll('#wIconGrid .w-icon-opt').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('#wIconGrid .w-icon-opt').forEach(function(x){ x.classList.remove('sel'); });
+      b.classList.add('sel');
+    });
+  });
+  document.querySelectorAll('#wColorGrid .swatch').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('#wColorGrid .swatch').forEach(function(x){ x.classList.remove('sel'); });
+      b.classList.add('sel');
+    });
+  });
+  document.querySelectorAll('#wDayGrid .day-toggle').forEach(function(b){
+    b.addEventListener('click', function(){ b.classList.toggle('active'); });
+  });
+  document.getElementById('wModalCancel').addEventListener('click', closeWinterTargetModal);
+  document.getElementById('wModalSave').addEventListener('click', saveWinterTargetModal);
+  if(existing){
+    document.getElementById('wModalDelete').addEventListener('click', function(){
+      const btn = document.getElementById('wModalDelete');
+      if(btn.dataset.confirming!=='1'){
+        btn.dataset.confirming='1';
+        btn.textContent='Tap again to delete';
+        clearTimeout(btn._wt);
+        btn._wt = setTimeout(function(){ btn.dataset.confirming='0'; btn.textContent='Delete target'; }, 4000);
+        return;
+      }
+      state.winterTargets = state.winterTargets.filter(function(x){ return x.id!==existing.id; });
+      delete state.winterLogs[existing.id];
+      storageSet(STORAGE_KEYS.winterTargets, state.winterTargets);
+      storageSet(STORAGE_KEYS.winterLogs, state.winterLogs);
+      closeWinterTargetModal();
+      renderWinterTabContent();
+      showToast('Target deleted', 2500);
+    });
+  }
+  setTimeout(function(){ const el=document.getElementById('wTargetName'); if(el) el.focus(); }, 50);
+}
+function closeWinterTargetModal(){
+  const b = document.getElementById('winterModalBackdrop');
+  if(b) b.remove();
+  winterEditingId = null;
+}
+function saveWinterTargetModal(){
+  const name = document.getElementById('wTargetName').value.trim();
+  if(!name){ showToast('Give the target a name', 2500); return; }
+  const iconEl = document.querySelector('#wIconGrid .w-icon-opt.sel');
+  const colorEl = document.querySelector('#wColorGrid .swatch.sel');
+  const days = Array.prototype.map.call(document.querySelectorAll('#wDayGrid .day-toggle.active'), function(b){ return parseInt(b.dataset.day,10); });
+  if(!days.length){ showToast('Pick at least one day', 2500); return; }
+  const icon = iconEl ? iconEl.dataset.icon : WINTER_ICONS[0];
+  const color = colorEl ? colorEl.dataset.color : SWATCH_COLORS[0];
+  if(winterEditingId){
+    const t = state.winterTargets.find(function(x){ return x.id===winterEditingId; });
+    if(t){ t.name=name; t.icon=icon; t.color=color; t.days=days; }
+  } else {
+    state.winterTargets.push({ id:'wt'+Date.now(), name:name, icon:icon, color:color, days:days, createdAt:Date.now() });
+  }
+  storageSet(STORAGE_KEYS.winterTargets, state.winterTargets);
+  closeWinterTargetModal();
+  renderWinterTabContent();
+}
+
 
 /* ---------- boot ---------- */
 init();
