@@ -564,6 +564,19 @@
   .t-time-badge.soon{background:var(--accent-dim); color:var(--accent);}
   .t-today-badge{font-size:9.5px; padding:2px 6px; border-radius:8px; background:var(--surface-3); color:var(--text-3); text-transform:uppercase; letter-spacing:0.4px;}
   .w-fab.t-fab{border-radius:18px; background:var(--success); color:#0E1A0C;}
+
+  /* ================= ACHIEVEMENTS PAGE POLISH ================= */
+  .ach-hero{background:linear-gradient(135deg, var(--accent-dim), var(--surface) 70%); position:relative; overflow:hidden;}
+  .ach-hero-icon{background:rgba(232,163,61,0.16); color:var(--accent);}
+  .ach-progress-fill{background:linear-gradient(90deg, var(--accent), #F4C878); position:relative; overflow:hidden; transition:width 0.7s cubic-bezier(.2,.8,.2,1);}
+  .ach-progress-fill::after{content:''; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent); animation:ach-shimmer 2.4s ease-in-out infinite;}
+  @keyframes ach-shimmer{0%{transform:translateX(-120%);} 100%{transform:translateX(120%);}}
+  .badge{transition:transform 0.15s ease, box-shadow 0.15s ease; animation:ach-badge-in 0.4s ease backwards;}
+  @keyframes ach-badge-in{from{opacity:0; transform:translateY(6px) scale(0.94);} to{opacity:1; transform:translateY(0) scale(1);}}
+  .badge.clickable:active{transform:scale(0.94);}
+  .badge.unlocked{box-shadow:0 0 0 1px rgba(232,163,61,0.5), 0 4px 16px rgba(232,163,61,0.18);}
+  .badge.img-badge.unlocked{box-shadow:0 0 0 1px rgba(232,163,61,0.5), 0 4px 16px rgba(232,163,61,0.22);}
+  .w-header-title .a-brand span{color:var(--accent);}
 </style>
 </head>
 <body>
@@ -759,6 +772,7 @@ function init(){
   todoRolloverCheck();
   state.achievements = storageGet(STORAGE_KEYS.achievements, {total:{}, daily:{}});
   state.winterTargets = storageGet(STORAGE_KEYS.winterTargets, []);
+  winterMigrateTargetYears();
   state.winterLogs = storageGet(STORAGE_KEYS.winterLogs, {});
   state.winterNotes = storageGet(STORAGE_KEYS.winterNotes, {});
   backfillAchievements();
@@ -853,7 +867,7 @@ function buildShell(){
     drawerBackdrop.addEventListener('click', closeDrawer);
     document.getElementById('drawerTodoBtn').addEventListener('click', function(){ closeDrawer(); openTodoPage(); });
     document.getElementById('drawerWinterBtn').addEventListener('click', function(){ closeDrawer(); openWinterArcPage(); });
-    document.getElementById('drawerAchBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('achievements'); });
+    document.getElementById('drawerAchBtn').addEventListener('click', function(){ closeDrawer(); openAchievementsPage(); });
     document.getElementById('drawerAvgBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('averages'); });
     document.getElementById('drawerGoalsBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('goals'); });
     document.getElementById('drawerBackupBtn').addEventListener('click', function(){ closeDrawer(); openOverlay('backup'); });
@@ -877,13 +891,14 @@ function buildShell(){
         '<div class="w-header">' +
           '<button class="w-back-btn" id="winterBackBtn" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 18l-6-6 6-6"/></svg></button>' +
           '<div class="w-header-title"><div class="w-brand">WINTER <span>ARC</span></div><div class="w-brand-sub">\u2744 OCT - DEC</div></div>' +
-          '<div class="w-header-spacer"></div>' +
+          '<button class="w-back-btn" id="winterPastBtn" aria-label="Past seasons"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 8v5l3 2"/><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>' +
         '</div>' +
         '<div class="w-body" id="winterArcBody"></div>' +
         '<button class="w-fab" id="winterAddBtn">+</button>' +
       '</div>';
     document.body.appendChild(wPage);
-    document.getElementById('winterBackBtn').addEventListener('click', closeWinterArcPage);
+    document.getElementById('winterBackBtn').addEventListener('click', winterBackBtnHandler);
+    document.getElementById('winterPastBtn').addEventListener('click', openWinterPastSeasonsModal);
     document.getElementById('winterAddBtn').addEventListener('click', function(){ openWinterTargetModal(null); });
   }
 
@@ -896,6 +911,7 @@ function buildShell(){
         '<div class="w-header">' +
           '<button class="w-back-btn" id="todoBackBtn" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 18l-6-6 6-6"/></svg></button>' +
           '<div class="w-header-title"><div class="w-brand t-brand">TO-DO <span>LIST</span></div><div class="w-brand-sub" id="todoFilterLabel">All tasks</div></div>' +
+          '<button class="w-back-btn" id="todoDeleteBtn" aria-label="Delete tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/></svg></button>' +
           '<button class="w-back-btn" id="todoFilterBtn" aria-label="Filter tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16l-6.5 7.5v6l-3 1.5v-7.5z"/></svg></button>' +
         '</div>' +
         '<div class="w-body" id="todoBody"></div>' +
@@ -903,6 +919,7 @@ function buildShell(){
       '</div>';
     document.body.appendChild(tPage);
     document.getElementById('todoBackBtn').addEventListener('click', closeTodoPage);
+    document.getElementById('todoDeleteBtn').addEventListener('click', openTodoDeleteModal);
     document.getElementById('todoFilterBtn').addEventListener('click', openTodoDrawer);
     document.getElementById('todoAddBtn').addEventListener('click', function(){ openTodoTaskModal(null); });
   }
@@ -912,6 +929,23 @@ function buildShell(){
     tDrawerBackdrop.id = 'todoDrawerBackdrop';
     document.body.appendChild(tDrawerBackdrop);
     tDrawerBackdrop.addEventListener('click', function(e){ if(e.target===tDrawerBackdrop) closeTodoDrawer(); });
+  }
+
+  if(!document.getElementById('achievementsPage')){
+    const aPage = document.createElement('div');
+    aPage.className = 'w-page';
+    aPage.id = 'achievementsPage';
+    aPage.innerHTML =
+      '<div class="w-shell">' +
+        '<div class="w-header">' +
+          '<button class="w-back-btn" id="achBackBtn" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 18l-6-6 6-6"/></svg></button>' +
+          '<div class="w-header-title"><div class="w-brand a-brand">YOUR <span>ACHIEVEMENTS</span></div><div class="w-brand-sub">Focus milestones</div></div>' +
+          '<div class="w-header-spacer"></div>' +
+        '</div>' +
+        '<div class="w-body" id="achievementsBody"></div>' +
+      '</div>';
+    document.body.appendChild(aPage);
+    document.getElementById('achBackBtn').addEventListener('click', closeAchievementsPage);
   }
 }
 
@@ -2976,9 +3010,38 @@ let winterTab = 'today';
 let winterMonthIdx = null;
 let winterEditingId = null;
 
+let winterViewYear = null;
+let winterReadOnly = false;
 function winterArcWindow(){
-  const y = new Date().getFullYear();
+  const y = winterViewYear || new Date().getFullYear();
   return { start:new Date(y,9,1,0,0,0,0), end:new Date(y,11,31,23,59,59,999), year:y };
+}
+function winterMigrateTargetYears(){
+  const currentYear = new Date().getFullYear();
+  let changed = false;
+  state.winterTargets.forEach(function(t){
+    if(typeof t.year !== 'number'){ t.year = currentYear; changed = true; }
+  });
+  if(changed) storageSet(STORAGE_KEYS.winterTargets, state.winterTargets);
+}
+function winterTargetsForYear(year){
+  return state.winterTargets.filter(function(t){ return t.year === year; });
+}
+function winterPastYearsWithData(){
+  const currentYear = new Date().getFullYear();
+  const years = new Set();
+  state.winterTargets.forEach(function(t){ if(typeof t.year==='number' && t.year < currentYear) years.add(t.year); });
+  Object.keys(state.winterLogs).forEach(function(targetId){
+    Object.keys(state.winterLogs[targetId]).forEach(function(ds){
+      const y = parseInt(ds.slice(0,4), 10);
+      if(y < currentYear) years.add(y);
+    });
+  });
+  Object.keys(state.winterNotes).forEach(function(key){
+    const y = parseInt(key.slice(0,4), 10);
+    if(y < currentYear) years.add(y);
+  });
+  return Array.from(years).sort(function(a,b){ return b-a; });
 }
 function isWinterArcLive(){
   const w = winterArcWindow(); const now = new Date();
@@ -3002,10 +3065,11 @@ function winterToggle(targetId, ds){
 }
 function winterStreak(t){
   const w = winterArcWindow();
+  const refDate = winterReadOnly ? new Date(w.end) : new Date();
   let streak = 0;
-  const ds0 = todayStr();
+  const ds0 = fmtDate(refDate);
   if(winterIsScheduled(t, ds0) && winterIsDone(t, ds0)) streak++;
-  let cur = new Date();
+  let cur = new Date(refDate);
   cur.setDate(cur.getDate()-1);
   while(cur >= w.start){
     const ds = fmtDate(cur);
@@ -3059,15 +3123,82 @@ function openWinterArcPage(){
   const nowMonth = new Date().getMonth();
   winterMonthIdx = (nowMonth>=9 && nowMonth<=11) ? nowMonth : 9;
   winterTab = 'today';
+  winterViewYear = null;
+  winterReadOnly = false;
   renderWinterArc();
 }
 function closeWinterArcPage(){
   document.getElementById('winterArcPage').classList.remove('open');
 }
+function winterBackBtnHandler(){
+  if(winterReadOnly){ exitWinterReadOnly(); }
+  else { closeWinterArcPage(); }
+}
+function updateWinterHeaderSub(){
+  const sub = document.querySelector('#winterArcPage .w-brand-sub');
+  if(!sub) return;
+  sub.textContent = winterReadOnly ? (winterViewYear + ' · Read-only') : '❄ OCT - DEC';
+}
+function openWinterPastYear(year){
+  winterViewYear = year;
+  winterReadOnly = true;
+  winterTab = 'arc';
+  closeWinterPastSeasonsModal();
+  renderWinterArc();
+}
+function exitWinterReadOnly(){
+  winterViewYear = null;
+  winterReadOnly = false;
+  winterTab = 'today';
+  renderWinterArc();
+}
+function openWinterPastSeasonsModal(){
+  const years = winterPastYearsWithData();
+  const backdrop = document.createElement('div');
+  backdrop.className = 'w-modal-backdrop';
+  backdrop.id = 'winterPastModalBackdrop';
+  const body = years.length ?
+    ('<div style="display:flex; flex-direction:column; gap:8px; margin-top:14px;">' +
+      years.map(function(y){ return '<button type="button" class="btn btn-ghost" data-wyear="'+y+'" style="width:100%; justify-content:flex-start; padding:12px 14px;">'+y+' Winter Arc</button>'; }).join('') +
+    '</div>') :
+    '<p class="empty-state" style="padding:16px 0 4px;">No past seasons yet.<br>Once this Winter Arc ends, it will show up here.</p>';
+  backdrop.innerHTML =
+    '<div class="w-modal-card" onclick="event.stopPropagation()">' +
+      '<h3>Past Seasons</h3>' + body +
+      '<div class="w-modal-actions"><button class="btn btn-ghost" id="wPastCancel" style="width:100%;">Close</button></div>' +
+    '</div>';
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', function(e){ if(e.target===backdrop) closeWinterPastSeasonsModal(); });
+  document.getElementById('wPastCancel').addEventListener('click', closeWinterPastSeasonsModal);
+  backdrop.querySelectorAll('[data-wyear]').forEach(function(btn){
+    btn.addEventListener('click', function(){ openWinterPastYear(parseInt(btn.dataset.wyear,10)); });
+  });
+}
+function closeWinterPastSeasonsModal(){
+  const b = document.getElementById('winterPastModalBackdrop');
+  if(b) b.remove();
+}
 
 function renderWinterArc(){
+  updateWinterHeaderSub();
   const body = document.getElementById('winterArcBody');
   const fab = document.getElementById('winterAddBtn');
+  if(winterReadOnly){
+    if(fab) fab.style.display = 'none';
+    body.innerHTML =
+      '<div class="period-row w-tabs">' +
+        ['month','arc'].map(function(k){
+          const lbl = k==='month'?'Month':'Arc';
+          return '<button class="period-btn '+(winterTab===k?'active':'')+'" data-wtab="'+k+'">'+lbl+'</button>';
+        }).join('') +
+      '</div><div id="winterTabContent"></div>';
+    if(winterTab!=='month' && winterTab!=='arc') winterTab='arc';
+    document.querySelectorAll('[data-wtab]').forEach(function(btn){
+      btn.addEventListener('click', function(){ winterTab = btn.dataset.wtab; renderWinterTabContent(); updateWinterTabButtons(); });
+    });
+    renderWinterTabContent();
+    return;
+  }
   const live = isWinterArcLive();
   if(fab) fab.style.display = live ? 'flex' : 'none';
   if(!live){
@@ -3163,14 +3294,15 @@ function winterWeekHtml(targets){
 function winterNotesCardHtml(monthLabel){
   const key = winterMonthKey();
   const notes = state.winterNotes[key] || {};
+  const ro = winterReadOnly ? ' disabled' : '';
   return '<div class="w-card w-notes-card">' +
     '<p class="section-label" style="margin-bottom:2px;">'+esc(monthLabel)+' reflection</p>' +
     '<div class="w-field-label">My monthly goal</div>' +
-    '<textarea class="w-input w-textarea" data-wnote="goal" placeholder="What are you working toward?">'+esc(notes.goal||'')+'</textarea>' +
+    '<textarea class="w-input w-textarea" data-wnote="goal" placeholder="What are you working toward?"'+ro+'>'+esc(notes.goal||'')+'</textarea>' +
     '<div class="w-field-label">What I have achieved</div>' +
-    '<textarea class="w-input w-textarea" data-wnote="achieved" placeholder="Wins so far...">'+esc(notes.achieved||'')+'</textarea>' +
+    '<textarea class="w-input w-textarea" data-wnote="achieved" placeholder="Wins so far..."'+ro+'>'+esc(notes.achieved||'')+'</textarea>' +
     '<div class="w-field-label">What I should improve</div>' +
-    '<textarea class="w-input w-textarea" data-wnote="improve" placeholder="What could go better...">'+esc(notes.improve||'')+'</textarea>' +
+    '<textarea class="w-input w-textarea" data-wnote="improve" placeholder="What could go better..."'+ro+'>'+esc(notes.improve||'')+'</textarea>' +
   '</div>';
 }
 function winterMonthHtml(targets){
@@ -3199,13 +3331,13 @@ function winterMonthHtml(targets){
         const done = winterIsDone(t, ds);
         const sched = winterIsScheduled(t, ds);
         const isToday = ds===todayDs;
-        cells += '<button class="w-cal-cell '+(done?'done':'')+' '+(isToday?'today':'')+' '+(!sched?'off':'')+'" style="--w-color:'+t.color+'" data-wcheck="'+t.id+'" data-wdate="'+ds+'"'+(!sched?' disabled':'')+'></button>';
+        cells += '<button class="w-cal-cell '+(done?'done':'')+' '+(isToday?'today':'')+' '+(!sched?'off':'')+'" style="--w-color:'+t.color+'" data-wcheck="'+t.id+'" data-wdate="'+ds+'"'+((!sched||winterReadOnly)?' disabled':'')+'></button>';
       }
       html += '<div class="w-card" style="--w-color:'+t.color+'">' +
         '<div class="w-month-card-head">' +
           '<div class="w-icon">'+t.icon+'</div>' +
-          '<div class="w-card-info"><div class="w-name">'+esc(t.name)+'</div><div class="w-streak">\uD83D\uDD25 '+streak+' Day'+(streak===1?'':'s')+'</div></div>' +
-          '<button class="w-icon-btn" data-wedit="'+t.id+'">'+winterEditIconSvg()+'</button>' +
+          '<div class="w-card-info"><div class="w-name">'+esc(t.name)+'</div><div class="w-streak">\uD83D\uDD25 '+streak+' Day'+(streak===1?'':'s')+(winterReadOnly?' (final)':'')+'</div></div>' +
+          (winterReadOnly ? '' : ('<button class="w-icon-btn" data-wedit="'+t.id+'">'+winterEditIconSvg()+'</button>')) +
           '<span class="w-sched-label">'+winterSchedLabel(t)+'</span>' +
         '</div>' +
         '<div class="w-cal-headers">'+['S','M','T','W','T','F','S'].map(function(d){return '<span>'+d+'</span>';}).join('')+'</div>' +
@@ -3235,14 +3367,14 @@ function winterArcTabHtml(targets){
       const done = winterIsDone(t, ds);
       const sched = winterIsScheduled(t, ds);
       const isToday = ds===todayDs;
-      cells += '<button class="w-cal-cell '+(done?'done':'')+' '+(isToday?'today':'')+' '+(!sched?'off':'')+'" style="--w-color:'+t.color+'" data-wcheck="'+t.id+'" data-wdate="'+ds+'"'+(!sched?' disabled':'')+'></button>';
+      cells += '<button class="w-cal-cell '+(done?'done':'')+' '+(isToday?'today':'')+' '+(!sched?'off':'')+'" style="--w-color:'+t.color+'" data-wcheck="'+t.id+'" data-wdate="'+ds+'"'+((!sched||winterReadOnly)?' disabled':'')+'></button>';
       cur.setDate(cur.getDate()+1);
     }
     html += '<div class="w-card" style="--w-color:'+t.color+'">' +
       '<div class="w-month-card-head">' +
         '<div class="w-icon">'+t.icon+'</div>' +
-        '<div class="w-card-info"><div class="w-name">'+esc(t.name)+'</div><div class="w-streak">\uD83D\uDD25 '+streak+' Day'+(streak===1?'':'s')+'</div></div>' +
-        '<button class="w-icon-btn" data-wedit="'+t.id+'">'+winterEditIconSvg()+'</button>' +
+        '<div class="w-card-info"><div class="w-name">'+esc(t.name)+'</div><div class="w-streak">\uD83D\uDD25 '+streak+' Day'+(streak===1?'':'s')+(winterReadOnly?' (final)':'')+'</div></div>' +
+        (winterReadOnly ? '' : ('<button class="w-icon-btn" data-wedit="'+t.id+'">'+winterEditIconSvg()+'</button>')) +
         '<span class="w-sched-label">'+winterSchedLabel(t)+'</span>' +
       '</div>' +
       '<div class="w-arc-grid">'+cells+'</div>' +
@@ -3253,7 +3385,7 @@ function winterArcTabHtml(targets){
 function renderWinterTabContent(){
   const el = document.getElementById('winterTabContent');
   if(!el) return;
-  const targets = state.winterTargets;
+  const targets = winterTargetsForYear(winterArcWindow().year);
   if(winterTab==='today') el.innerHTML = winterTodayHtml(targets);
   else if(winterTab==='week') el.innerHTML = winterWeekHtml(targets);
   else if(winterTab==='month') el.innerHTML = winterMonthHtml(targets);
@@ -3264,6 +3396,7 @@ function wireWinterContentEvents(){
   document.querySelectorAll('[data-wmonth]').forEach(function(btn){
     btn.addEventListener('click', function(){ winterMonthIdx = parseInt(btn.dataset.wmonth,10); renderWinterTabContent(); });
   });
+  if(winterReadOnly) return;
   document.querySelectorAll('[data-wcheck]').forEach(function(btn){
     btn.addEventListener('click', function(){
       if(btn.disabled) return;
@@ -3378,7 +3511,7 @@ function saveWinterTargetModal(){
     const t = state.winterTargets.find(function(x){ return x.id===winterEditingId; });
     if(t){ t.name=name; t.icon=icon; t.color=color; t.days=days; }
   } else {
-    state.winterTargets.push({ id:'wt'+Date.now(), name:name, icon:icon, color:color, days:days, createdAt:Date.now() });
+    state.winterTargets.push({ id:'wt'+Date.now(), name:name, icon:icon, color:color, days:days, createdAt:Date.now(), year: winterArcWindow().year });
   }
   storageSet(STORAGE_KEYS.winterTargets, state.winterTargets);
   closeWinterTargetModal();
@@ -3392,14 +3525,31 @@ let todoFilter = 'all';
 let todoEditingId = null;
 let todoRefreshInterval = null;
 
+function todoDeadlineMoment(t){
+  if(t.endDate){
+    const p = t.endDate.split('-').map(Number);
+    if(t.endTime){
+      const tp = t.endTime.split(':').map(Number);
+      return new Date(p[0], p[1]-1, p[2], tp[0], tp[1], 0, 0);
+    }
+    return new Date(p[0], p[1]-1, p[2], 23, 59, 59, 999);
+  }
+  return null;
+}
 function todoRolloverCheck(){
   const today = todayStr();
+  const now = new Date();
   let changed = false;
   state.todos.forEach(function(t){
-    if(t.todayOnly && !t.done && !t.archivedIncomplete && t.createdDate && t.createdDate !== today){
-      t.archivedIncomplete = true;
-      changed = true;
+    if(t.done || t.archivedIncomplete) return;
+    let expired = false;
+    const deadline = todoDeadlineMoment(t);
+    if(deadline){
+      if(now > deadline) expired = true;
+    } else if(t.todayOnly && t.createdDate && t.createdDate !== today){
+      expired = true;
     }
+    if(expired){ t.archivedIncomplete = true; changed = true; }
   });
   if(changed) storageSet(STORAGE_KEYS.todos, state.todos);
 }
@@ -3408,20 +3558,40 @@ function todoFormat12h(hh, mm){
   let h12 = hh % 12; if(h12===0) h12 = 12;
   return h12 + ':' + pad(mm) + ' ' + period;
 }
+function todoDateLabel(d){
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[d.getMonth()] + ' ' + d.getDate();
+}
 function todoTimeLeftInfo(t){
-  if(!t.endTime) return null;
-  const parts = t.endTime.split(':');
-  const hh = parseInt(parts[0],10), mm = parseInt(parts[1],10);
-  if(isNaN(hh) || isNaN(mm)) return null;
+  if(!t.endTime && !t.endDate) return null;
   const now = new Date();
-  const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0, 0);
-  const label = todoFormat12h(hh, mm);
+  let target, hasDate = !!t.endDate;
+  if(t.endDate){
+    const p = t.endDate.split('-').map(Number);
+    if(t.endTime){
+      const tp = t.endTime.split(':').map(Number);
+      target = new Date(p[0], p[1]-1, p[2], tp[0], tp[1], 0, 0);
+    } else {
+      target = new Date(p[0], p[1]-1, p[2], 23, 59, 59, 999);
+    }
+  } else {
+    const tp = t.endTime.split(':').map(Number);
+    target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), tp[0], tp[1], 0, 0);
+  }
+  const sameDay = target.getFullYear()===now.getFullYear() && target.getMonth()===now.getMonth() && target.getDate()===now.getDate();
+  let label;
+  if(hasDate && !sameDay){
+    label = todoDateLabel(target) + (t.endTime ? (', ' + todoFormat12h(target.getHours(), target.getMinutes())) : '');
+  } else {
+    label = t.endTime ? todoFormat12h(target.getHours(), target.getMinutes()) : 'End of day';
+  }
   const diffMs = target - now;
   if(diffMs <= 0) return { text: label + ' \u00b7 Overdue', cls:'overdue' };
   const diffMin = Math.round(diffMs/60000);
   let rel;
   if(diffMin < 60) rel = diffMin + ' min left';
-  else { const hrs = Math.floor(diffMin/60); rel = hrs + ' hour' + (hrs===1?'':'s') + ' left'; }
+  else if(diffMin < 1440) { const hrs = Math.floor(diffMin/60); rel = hrs + ' hour' + (hrs===1?'':'s') + ' left'; }
+  else { const days = Math.floor(diffMin/1440); rel = days + ' day' + (days===1?'':'s') + ' left'; }
   return { text: label + ' \u00b7 ' + rel, cls: diffMin<=60 ? 'soon' : '' };
 }
 function todoFilteredList(){
@@ -3576,6 +3746,7 @@ function openTodoTaskModal(editId){
   const text = existing ? existing.text : '';
   const subjectId = existing ? (existing.subjectId || '') : '';
   const endTime = existing ? (existing.endTime || '') : '';
+  const endDate = existing ? (existing.endDate || '') : '';
   const todayOnly = existing ? !!existing.todayOnly : false;
 
   const backdrop = document.createElement('div');
@@ -3593,6 +3764,8 @@ function openTodoTaskModal(editId){
           return '<button type="button" class="chip '+(subjectId===s.id?'active':'')+'" style="--dot-color:'+s.color+'" data-subj="'+s.id+'"><span class="dot" style="background:'+s.color+'"></span>'+esc(s.name)+'</button>';
         }).join('') +
       '</div>' +
+      '<div class="w-field-label">End date <span style="text-transform:none; color:var(--text-3); letter-spacing:0;">(optional)</span></div>' +
+      '<input type="date" class="w-input" id="tEndDate" value="'+endDate+'">' +
       '<div class="w-field-label">End time <span style="text-transform:none; color:var(--text-3); letter-spacing:0;">(optional)</span></div>' +
       '<input type="time" class="w-input" id="tEndTime" value="'+endTime+'">' +
       '<div class="w-field-label">Only for today</div>' +
@@ -3657,18 +3830,19 @@ function saveTodoTaskModal(){
   const selChip = document.querySelector('#tSubjRow .chip.active');
   const subjectId = (selChip && selChip.dataset.subj) ? selChip.dataset.subj : null;
   const endTimeVal = document.getElementById('tEndTime').value || null;
+  const endDateVal = document.getElementById('tEndDate').value || null;
   const todayOnly = document.getElementById('tTodayOnlyBtn').dataset.on === '1';
   if(todoEditingId){
     const t = state.todos.find(function(x){ return x.id===todoEditingId; });
     if(t){
-      t.text = text; t.subjectId = subjectId; t.endTime = endTimeVal; t.todayOnly = todayOnly;
+      t.text = text; t.subjectId = subjectId; t.endTime = endTimeVal; t.endDate = endDateVal; t.todayOnly = todayOnly;
       if(todayOnly && !t.createdDate) t.createdDate = todayStr();
-      if(!todayOnly) t.archivedIncomplete = false;
+      if(!todayOnly && !endDateVal) t.archivedIncomplete = false;
     }
   } else {
     state.todos.push({
       id: 'td'+Date.now(), text: text, done: false,
-      subjectId: subjectId, endTime: endTimeVal, todayOnly: todayOnly,
+      subjectId: subjectId, endTime: endTimeVal, endDate: endDateVal, todayOnly: todayOnly,
       createdDate: todayStr(), archivedIncomplete: false, completedAt: null
     });
   }
@@ -3676,6 +3850,184 @@ function saveTodoTaskModal(){
   closeTodoTaskModal();
   todoFilter = 'all';
   renderTodoBody();
+}
+
+function openTodoDeleteModal(){
+  const isSubjFilter = todoFilter && todoFilter.indexOf('subj:')===0;
+  let subjName = '';
+  if(isSubjFilter){
+    const s = state.subjects.find(function(x){ return x.id===todoFilter.slice(5); });
+    subjName = s ? s.name : '';
+  }
+  const backdrop = document.createElement('div');
+  backdrop.className = 'w-modal-backdrop';
+  backdrop.id = 'todoDeleteModalBackdrop';
+  backdrop.innerHTML =
+    '<div class="w-modal-card" onclick="event.stopPropagation()">' +
+      '<h3>Delete tasks</h3>' +
+      (isSubjFilter ?
+        ('<label style="display:flex; align-items:center; gap:10px; margin-top:16px; font-size:13px; color:var(--text-2); cursor:pointer;"><input type="checkbox" id="tDelScopeCheck" style="width:16px; height:16px; accent-color:var(--accent);">Only \u201c'+esc(subjName)+'\u201d tasks</label>')
+        : '') +
+      '<button class="btn btn-danger" id="tDelCompletedBtn" style="width:100%; margin-top:16px;">Delete completed</button>' +
+      '<button class="btn btn-danger" id="tDelAllBtn" style="width:100%; margin-top:10px;">Delete all</button>' +
+      '<button class="btn btn-ghost" id="tDelCancelBtn" style="width:100%; margin-top:10px;">Cancel</button>' +
+    '</div>';
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', function(e){ if(e.target===backdrop) closeTodoDeleteModal(); });
+  document.getElementById('tDelCancelBtn').addEventListener('click', closeTodoDeleteModal);
+  document.getElementById('tDelCompletedBtn').addEventListener('click', function(){
+    const btn = document.getElementById('tDelCompletedBtn');
+    if(btn.dataset.confirming!=='1'){
+      btn.dataset.confirming='1'; btn.textContent='Tap again to confirm';
+      clearTimeout(btn._t);
+      btn._t = setTimeout(function(){ if(btn && btn.dataset){ btn.dataset.confirming='0'; btn.textContent='Delete completed'; } }, 4000);
+      return;
+    }
+    performTodoBulkDelete('completed');
+  });
+  document.getElementById('tDelAllBtn').addEventListener('click', function(){
+    const btn = document.getElementById('tDelAllBtn');
+    if(btn.dataset.confirming!=='1'){
+      btn.dataset.confirming='1'; btn.textContent='Tap again to confirm';
+      clearTimeout(btn._t);
+      btn._t = setTimeout(function(){ if(btn && btn.dataset){ btn.dataset.confirming='0'; btn.textContent='Delete all'; } }, 4000);
+      return;
+    }
+    performTodoBulkDelete('all');
+  });
+}
+function closeTodoDeleteModal(){
+  const b = document.getElementById('todoDeleteModalBackdrop');
+  if(b) b.remove();
+}
+function performTodoBulkDelete(mode){
+  const scopeCheck = document.getElementById('tDelScopeCheck');
+  const scoped = scopeCheck && scopeCheck.checked;
+  const subjId = (scoped && todoFilter && todoFilter.indexOf('subj:')===0) ? todoFilter.slice(5) : null;
+  const removed = [];
+  state.todos = state.todos.filter(function(t){
+    if(subjId && t.subjectId!==subjId) return true;
+    const matches = mode==='all' ? true : !!t.done;
+    if(matches){ removed.push(t); return false; }
+    return true;
+  });
+  storageSet(STORAGE_KEYS.todos, state.todos);
+  closeTodoDeleteModal();
+  renderTodoBody();
+  const count = removed.length;
+  showUndoToast(count + ' task'+(count===1?'':'s')+' deleted.', function(){
+    state.todos = state.todos.concat(removed);
+    storageSet(STORAGE_KEYS.todos, state.todos);
+    renderTodoBody();
+  });
+}
+
+
+
+/* ================= ACHIEVEMENTS PAGE ================= */
+function openAchievementsPage(){
+  document.getElementById('achievementsPage').classList.add('open');
+  renderAchievementsPage();
+}
+function closeAchievementsPage(){
+  document.getElementById('achievementsPage').classList.remove('open');
+}
+function renderAchievementsPage(){
+  const body = document.getElementById('achievementsBody');
+  const allTimeHours = state.sessions.reduce(function(a,s){ return a+s.durationMin; },0)/60;
+  let nextMilestone = TOTAL_HOUR_MILESTONES.find(function(m){ return !state.achievements.total[m]; });
+  const prevMilestone = TOTAL_HOUR_MILESTONES.filter(function(m){ return state.achievements.total[m]; }).pop() || 0;
+  const progressPct = nextMilestone ? Math.min(100, Math.round(((allTimeHours-prevMilestone)/(nextMilestone-prevMilestone))*100)) : 100;
+  const unlockedCount = TOTAL_HOUR_MILESTONES.filter(function(m){ return state.achievements.total[m]; }).length;
+  const daysToReach = computeDaysToMilestones();
+
+  body.innerHTML =
+    '<div class="ach-hero">' +
+      '<div class="ach-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>' +
+      '<div><div class="lbl">Total time focused</div><div class="val">' + allTimeHours.toFixed(1) + 'h</div></div>' +
+    '</div>' +
+    (nextMilestone ? (
+      '<div class="ach-progress-track"><div class="ach-progress-fill" style="width:' + progressPct + '%;"></div></div>' +
+      '<div class="ach-progress-label">' + allTimeHours.toFixed(1) + 'h / ' + nextMilestone + 'h toward next badge</div>'
+    ) : '<div class="ach-progress-label">All focus badges unlocked! Incredible consistency.</div>') +
+
+    '<p class="section-label" style="margin-top:22px;">Focus milestones \u00b7 ' + unlockedCount + '/' + TOTAL_HOUR_MILESTONES.length + '</p>' +
+    '<p class="tap-hint" style="margin-top:-4px;">Tap an unlocked badge to see which days count toward it</p>' +
+    '<div class="badge-grid">' + TOTAL_HOUR_MILESTONES.map(function(m, idx){
+      const unlocked = state.achievements.total[m];
+      const days = daysToReach[m];
+      return '<div class="badge ' + (unlocked?'unlocked clickable':'') + '" data-milestone="' + m + '" style="animation-delay:' + (idx*0.025).toFixed(3) + 's"><div class="badge-num">' + m + '</div><div class="badge-lbl">Hour' + (m===1?'':'s') + '</div>' + (unlocked ? ('<div class="badge-date">' + unlocked + (days?(' \u00b7 '+days+'d'):'') + '</div>') : '') + '</div>';
+    }).join('') + '</div>' +
+
+    '<p class="section-label" style="margin-top:22px;">Daily study day achievements</p>' +
+    '<p class="tap-hint" style="margin-top:-4px;">Tap a badge to see which days it counts</p>' +
+    '<div class="badge-grid">' + DAILY_HOUR_MILESTONES.map(function(m, idx){
+      const qualifyingDays = daysReachingThreshold(m);
+      const unlocked = qualifyingDays.length > 0;
+      return '<div class="badge img-badge ' + (unlocked?'unlocked clickable':'') + '" data-daily="' + m + '" style="animation-delay:' + ((TOTAL_HOUR_MILESTONES.length+idx)*0.025).toFixed(3) + 's"><img src="badge-' + m + 'h.jpg" alt="' + m + '+ hour day badge" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px;' + (unlocked?'':' filter:grayscale(1); opacity:0.35;') + '">' + (unlocked ? ('<div class="badge-date">' + qualifyingDays.length + ' day' + (qualifyingDays.length===1?'':'s') + '</div>') : '') + '</div>';
+    }).join('') + '</div>';
+
+  body.querySelectorAll('.badge.clickable[data-daily]').forEach(function(b){
+    b.addEventListener('click', function(){ openBadgeDetailModal('daily', parseInt(b.dataset.daily,10)); });
+  });
+  body.querySelectorAll('.badge.clickable[data-milestone]').forEach(function(b){
+    b.addEventListener('click', function(){ openBadgeDetailModal('total', parseInt(b.dataset.milestone,10)); });
+  });
+}
+function openBadgeDetailModal(kind, value){
+  let titleText, introText, dates;
+  if(kind==='total'){
+    const daysToReach = computeDaysToMilestones();
+    const daysCount = daysToReach[value];
+    titleText = value + 'H Focus';
+    introText = daysCount ? ('Reached across ' + daysCount + ' study day' + (daysCount===1?'':'s') + '.') : 'Not reached yet.';
+    const byDay = {};
+    state.sessions.forEach(function(s){ const d=fmtDate(s.start); (byDay[d]=byDay[d]||[]).push(s); });
+    dates = Object.keys(byDay).sort().reverse().map(function(date){
+      const sessions = byDay[date];
+      return { date: date, min: sessions.reduce(function(a,s){ return a+s.durationMin; },0), sessions: sessions };
+    });
+  } else {
+    const days = daysReachingThreshold(value);
+    titleText = value + '+ Hour Days';
+    introText = days.length ? (days.length + ' day' + (days.length===1?'':'s') + ' where you studied ' + value + '+ hours.') : 'No days yet \u2014 keep going.';
+    dates = days.map(function(d){ return { date:d.date, min:d.min, sessions: state.sessions.filter(function(s){ return fmtDate(s.start)===d.date; }) }; });
+  }
+  const backdrop = document.createElement('div');
+  backdrop.className = 'w-modal-backdrop';
+  backdrop.id = 'achDetailModalBackdrop';
+  backdrop.innerHTML =
+    '<div class="w-modal-card" onclick="event.stopPropagation()" style="max-width:360px;">' +
+      '<h3>'+titleText+'</h3>' +
+      '<p class="hint" style="text-align:left; margin:10px 0 14px;">'+introText+(dates.length?' Tap any date to see the subject breakdown.':'')+'</p>' +
+      '<div id="achDetailDayList">' + dates.map(function(d){
+        const label = d.date===todayStr() ? 'Today' : parseLocalDate(d.date).toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'});
+        const bySubj = {};
+        d.sessions.forEach(function(s){ bySubj[s.subjectId]=(bySubj[s.subjectId]||0)+s.durationMin; });
+        const subjRows = Object.entries(bySubj).sort(function(a,b){ return b[1]-a[1]; }).map(function(entry){
+          const subj = subjectById(entry[0]);
+          return '<li><span class="bd-left"><span class="dot" style="background:'+(subj?subj.color:'#888')+'"></span>'+(subj?esc(subj.name):'Deleted subject')+'</span><span class="mono">'+minutesToH(entry[1])+'</span></li>';
+        }).join('');
+        return '<div class="day-row"><div class="day-row-head" data-date="'+d.date+'"><span class="drh-date">'+label+'</span><span class="drh-right">'+minutesToH(d.min)+'<span class="day-row-arrow">\u25be</span></span></div><div class="day-row-detail" id="ach-detail-'+d.date+'"><ul class="breakdown-list">'+subjRows+'</ul></div></div>';
+      }).join('') + '</div>' +
+      '<button class="btn btn-ghost" id="achDetailClose" style="width:100%; margin-top:16px;">Close</button>' +
+    '</div>';
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', function(e){ if(e.target===backdrop) closeBadgeDetailModal(); });
+  document.getElementById('achDetailClose').addEventListener('click', closeBadgeDetailModal);
+  backdrop.querySelectorAll('.day-row-head').forEach(function(head){
+    head.addEventListener('click', function(){
+      const date = head.dataset.date;
+      const detail = document.getElementById('ach-detail-'+date);
+      const arrow = head.querySelector('.day-row-arrow');
+      detail.classList.toggle('open');
+      arrow.classList.toggle('open');
+    });
+  });
+}
+function closeBadgeDetailModal(){
+  const b = document.getElementById('achDetailModalBackdrop');
+  if(b) b.remove();
 }
 
 
