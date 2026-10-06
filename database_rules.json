@@ -1,0 +1,130 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "codes": {
+      "$c": {
+        ".read": "auth != null",
+        ".write": "auth != null && !data.exists() && newData.val() === auth.uid",
+        ".validate": "newData.isString() && $c.matches(/^[A-Z2-9]{6}$/)"
+      }
+    },
+    "users": {
+      "$u": {
+        ".read": "auth != null && auth.uid === $u",
+        "code": {
+          ".write": "auth != null && auth.uid === $u"
+        },
+        "grp": {
+          ".write": "auth != null && ((auth.uid === $u && (newData.val() === null || (!data.exists() && !root.child('groups').child(newData.val()).exists()))) || (!data.exists() && root.child('reqs').child(auth.uid).child($u).exists()))"
+        }
+      }
+    },
+    "reqs": {
+      "$to": {
+        ".read": "auth != null && auth.uid === $to",
+        "$from": {
+          ".read": "auth != null && auth.uid === $from",
+          ".write": "auth != null && (auth.uid === $from || auth.uid === $to)",
+          ".validate": "newData.hasChildren(['n','e','t'])"
+        }
+      }
+    },
+    "groups": {
+      "$g": {
+        "m": {
+          ".read": "auth != null && root.child('users').child(auth.uid).child('grp').val() === $g",
+          "$u": {
+            ".write": "auth != null && auth.uid === $u && root.child('users').child(auth.uid).child('grp').val() === $g",
+            ".validate": "newData.hasChildren(['n','u'])"
+          }
+        }
+      }
+    },
+    "lock": {
+      "pw": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.token.email === 'admin@study-log.app'",
+        ".validate": "newData.hasChildren(['s','h','i','v'])",
+        "s": {
+          ".validate": "newData.isString() && newData.val().length >= 8 && newData.val().length <= 64"
+        },
+        "h": {
+          ".validate": "newData.isString() && newData.val().length === 64"
+        },
+        "i": {
+          ".validate": "newData.isNumber() && newData.val() >= 1000 && newData.val() <= 1000000"
+        },
+        "v": {
+          ".validate": "newData.isNumber()"
+        },
+        "fv": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      },
+      "u": {
+        ".read": "auth != null && auth.token.email === 'admin@study-log.app'",
+        ".write": "auth != null && auth.token.email === 'admin@study-log.app'",
+        "$uid": {
+          "reg": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid && !data.exists()",
+            ".validate": "newData.hasChildren(['n','c','m','k','o','t'])",
+            "n": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
+            },
+            "c": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 24"
+            },
+            "m": {
+              ".validate": "newData.isString() && newData.val().length >= 7 && newData.val().length <= 20"
+            },
+            "k": {
+              ".validate": "newData.isString() && (newData.val() === 'y' || newData.val() === 'n')"
+            },
+            "x": {
+              ".validate": "newData.isString() && newData.val().length <= 300"
+            },
+            "o": {
+              ".validate": "newData.val() === true"
+            },
+            "t": {
+              ".validate": "newData.isNumber()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "ask": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.isNumber()"
+          },
+          "seen": {
+            ".write": "auth != null && auth.uid === $uid",
+            "a": {
+              ".validate": "newData.isNumber()"
+            },
+            "l": {
+              ".validate": "newData.isNumber()"
+            },
+            "w": {
+              ".validate": "newData.isString() && (newData.val() === 'f' || newData.val() === 'd' || newData.val() === 'g')"
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "done": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    }
+  }
+}

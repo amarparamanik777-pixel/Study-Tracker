@@ -1,6 +1,6 @@
-const CACHE = 'study-log-v14';
+const CACHE = 'study-log-v16';
 const LOCAL_ASSETS = [
-  './', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-512-maskable.png', './sound-start.mp3',
+  './', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-512-maskable.png', './sound-start.mp3', './friends.js', './firebase-config.js', './lock.js', './admin.js',
   './badge-6h.jpg', './badge-7h.jpg', './badge-8h.jpg', './badge-9h.jpg', './badge-10h.jpg', './badge-12h.jpg',
   './popup-6h.jpg', './popup-7h.jpg', './popup-8h.jpg', './popup-9h.jpg', './popup-10h.jpg', './popup-12h.jpg'
 ];
@@ -46,6 +46,7 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+  if (/(firebaseio\.com|firebasedatabase\.app|googleapis\.com)$/.test(url.hostname)) return; // never cache squad/API calls
 
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
