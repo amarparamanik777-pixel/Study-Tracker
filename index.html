@@ -12,6 +12,38 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Study Log">
+<script>
+/* Lock pre-gate: decides before anything is drawn whether this install must enter the password.
+   Existing installs (they already hold app data) are let in once; new installs and re-installs are locked. */
+(function(){
+  var d=document.documentElement;
+  try{
+    var raw=localStorage.getItem('sl_lock_v1'), s=null;
+    if(raw!==null){ try{ s=JSON.parse(raw)||{}; }catch(e){ s={}; } }
+    if(s&&s.ok===1) return;
+    if(!s){
+      var K=['lastPopup','subjects','sessions','achievements','busyBlocks','winterTargets','winterLogs','winterNotes','activeTimer','sl_squad_v1'], old=false, i;
+      for(i=0;i<K.length;i++){ if(localStorage.getItem(K[i])!==null){ old=true; break; } }
+      s=old?{ok:1,how:'g',at:Date.now(),pv:0}:{ok:0};
+      localStorage.setItem('sl_lock_v1',JSON.stringify(s));
+      if(old) return;
+    }
+  }catch(e){}
+  d.classList.add('sl-locked');
+  var st=document.createElement('style');
+  st.textContent='html.sl-locked{background:#14151A;overflow:hidden!important}html.sl-locked body>*:not(#slLock){visibility:hidden!important}';
+  (document.head||d).appendChild(st);
+  setTimeout(function(){
+    if(window.SLLock||!document.body||document.getElementById('slLock')) return;
+    var b=document.createElement('div'); b.id='slLock';
+    b.style.cssText='position:fixed;inset:0;z-index:100000;background:#14151A;color:#EDEBE3;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font:15px/1.6 sans-serif';
+    b.innerHTML='<div>Could not load the lock screen.<br>Check your internet connection, then <a href="" style="color:#E8A33D" onclick="location.reload();return false">reload</a>.</div>';
+    document.body.appendChild(b);
+  },10000);
+})();
+</script>
+<script src="firebase-config.js"></script>
+<script src="lock.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -3618,14 +3650,14 @@ function todoEmptyMsg(){
 }
 function todoItemHtml(t){
   const subj = t.subjectId ? state.subjects.find(function(s){ return s.id===t.subjectId; }) : null;
-  const timeInfo = todoTimeLeftInfo(t);
+  const timeInfo = t.done ? null : todoTimeLeftInfo(t);
   let meta = '';
-  if(subj || timeInfo || t.todayOnly || t.archivedIncomplete){
+  if(subj || timeInfo || (!t.done && t.todayOnly) || (t.archivedIncomplete && !t.done)){
     meta = '<div class="t-meta-row">';
     if(subj) meta += '<span class="t-subject-tag"><span class="dot" style="background:'+subj.color+'"></span>'+esc(subj.name)+'</span>';
     if(timeInfo) meta += '<span class="t-time-badge '+timeInfo.cls+'">'+timeInfo.text+'</span>';
     if(t.archivedIncomplete && !t.done) meta += '<span class="t-today-badge" style="color:var(--danger);">Incomplete</span>';
-    else if(t.todayOnly) meta += '<span class="t-today-badge">Today only</span>';
+    else if(!t.done && t.todayOnly) meta += '<span class="t-today-badge">Today only</span>';
     meta += '</div>';
   }
   return '<div class="t-item" data-tid="'+t.id+'">' +
@@ -4062,5 +4094,7 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+<script src="friends.js"></script>
+<script src="admin.js"></script>
 </body>
 </html>
