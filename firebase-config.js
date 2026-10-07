@@ -1,5 +1,5 @@
-// Paste your two Firebase values between the quotes (see SETUP.md, step 5).
+// Firebase values for Study Log (see SETUP.md, step 7).
 window.FB_CONFIG = {
-  apiKey: "",
-  databaseURL: ""   // looks like https://your-project-default-rtdb.firebaseio.com
+  apiKey: "AIzaSyDQbtrDJIm_wla_t33tM1byKrVdx_CmDVM",
+  databaseURL: "https://study-tracker-9b5c9-default-rtdb.firebaseio.com"
 };
