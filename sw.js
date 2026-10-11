@@ -1,4 +1,4 @@
-const CACHE = 'study-log-v16';
+const CACHE = 'study-log-v17';
 const LOCAL_ASSETS = [
   './', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-512-maskable.png', './sound-start.mp3', './friends.js', './firebase-config.js', './lock.js', './admin.js',
   './badge-6h.jpg', './badge-7h.jpg', './badge-8h.jpg', './badge-9h.jpg', './badge-10h.jpg', './badge-12h.jpg',

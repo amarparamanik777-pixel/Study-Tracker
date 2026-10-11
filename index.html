@@ -13,29 +13,29 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Study Log">
 <script>
-/* Lock pre-gate: decides before anything is drawn whether this install must enter the password.
+/* Lock pre-gate: decides before anything is drawn whether this install must enter its one-time password.
    Existing installs (they already hold app data) are let in once; new installs and re-installs are locked. */
 (function(){
   var d=document.documentElement;
   try{
     var raw=localStorage.getItem('sl_lock_v1'), s=null;
     if(raw!==null){ try{ s=JSON.parse(raw)||{}; }catch(e){ s={}; } }
-    if(s&&s.ok===1) return;
+    if(s&&s.ok===1&&!s.hold) return;
     if(!s){
       var K=['lastPopup','subjects','sessions','achievements','busyBlocks','winterTargets','winterLogs','winterNotes','activeTimer','sl_squad_v1'], old=false, i;
       for(i=0;i<K.length;i++){ if(localStorage.getItem(K[i])!==null){ old=true; break; } }
-      s=old?{ok:1,how:'g',at:Date.now(),pv:0}:{ok:0};
+      s=old?{ok:1,how:'g'}:{ok:0};
       localStorage.setItem('sl_lock_v1',JSON.stringify(s));
       if(old) return;
     }
   }catch(e){}
   d.classList.add('sl-locked');
   var st=document.createElement('style');
-  st.textContent='html.sl-locked{background:#14151A;overflow:hidden!important}html.sl-locked body>*:not(#slLock){visibility:hidden!important}';
+  st.textContent='html.sl-locked{background:#14151A;overflow:hidden!important}html.sl-locked body>*:not(.sl-ov){visibility:hidden!important}';
   (document.head||d).appendChild(st);
   setTimeout(function(){
-    if(window.SLLock||!document.body||document.getElementById('slLock')) return;
-    var b=document.createElement('div'); b.id='slLock';
+    if(window.SLLock||!document.body||document.querySelector('.sl-ov')) return;
+    var b=document.createElement('div'); b.className='sl-ov';
     b.style.cssText='position:fixed;inset:0;z-index:100000;background:#14151A;color:#EDEBE3;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font:15px/1.6 sans-serif';
     b.innerHTML='<div>Could not load the lock screen.<br>Check your internet connection, then <a href="" style="color:#E8A33D" onclick="location.reload();return false">reload</a>.</div>';
     document.body.appendChild(b);
@@ -4094,6 +4094,7 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+<script src="firebase-config.js"></script>
 <script src="friends.js"></script>
 <script src="admin.js"></script>
 </body>
