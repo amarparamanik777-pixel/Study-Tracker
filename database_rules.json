@@ -12,9 +12,7 @@
     "users": {
       "$u": {
         ".read": "auth != null && auth.uid === $u",
-        "code": {
-          ".write": "auth != null && auth.uid === $u"
-        },
+        "code": { ".write": "auth != null && auth.uid === $u" },
         "grp": {
           ".write": "auth != null && ((auth.uid === $u && (newData.val() === null || (!data.exists() && !root.child('groups').child(newData.val()).exists()))) || (!data.exists() && root.child('reqs').child(auth.uid).child($u).exists()))"
         }
@@ -42,29 +40,6 @@
       }
     },
     "lock": {
-      "pw": {
-        ".read": "auth != null",
-        ".write": "auth != null && auth.token.email === 'admin@study-log.app'",
-        ".validate": "newData.hasChildren(['s','h','i','v'])",
-        "s": {
-          ".validate": "newData.isString() && newData.val().length >= 8 && newData.val().length <= 64"
-        },
-        "h": {
-          ".validate": "newData.isString() && newData.val().length === 64"
-        },
-        "i": {
-          ".validate": "newData.isNumber() && newData.val() >= 1000 && newData.val() <= 1000000"
-        },
-        "v": {
-          ".validate": "newData.isNumber()"
-        },
-        "fv": {
-          ".validate": "newData.isNumber()"
-        },
-        "$other": {
-          ".validate": false
-        }
-      },
       "u": {
         ".read": "auth != null && auth.token.email === 'admin@study-log.app'",
         ".write": "auth != null && auth.token.email === 'admin@study-log.app'",
@@ -73,30 +48,14 @@
             ".read": "auth != null && auth.uid === $uid",
             ".write": "auth != null && auth.uid === $uid && !data.exists()",
             ".validate": "newData.hasChildren(['n','c','m','k','o','t'])",
-            "n": {
-              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
-            },
-            "c": {
-              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 24"
-            },
-            "m": {
-              ".validate": "newData.isString() && newData.val().length >= 7 && newData.val().length <= 20"
-            },
-            "k": {
-              ".validate": "newData.isString() && (newData.val() === 'y' || newData.val() === 'n')"
-            },
-            "x": {
-              ".validate": "newData.isString() && newData.val().length <= 300"
-            },
-            "o": {
-              ".validate": "newData.val() === true"
-            },
-            "t": {
-              ".validate": "newData.isNumber()"
-            },
-            "$other": {
-              ".validate": false
-            }
+            "n": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "c": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 24" },
+            "m": { ".validate": "newData.isString() && newData.val().length >= 7 && newData.val().length <= 20" },
+            "k": { ".validate": "newData.isString() && (newData.val() === 'y' || newData.val() === 'n')" },
+            "x": { ".validate": "newData.isString() && newData.val().length <= 300" },
+            "o": { ".validate": "newData.val() === true" },
+            "t": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
           },
           "ask": {
             ".write": "auth != null && auth.uid === $uid",
@@ -104,25 +63,104 @@
           },
           "seen": {
             ".write": "auth != null && auth.uid === $uid",
-            "a": {
-              ".validate": "newData.isNumber()"
-            },
-            "l": {
-              ".validate": "newData.isNumber()"
-            },
-            "w": {
-              ".validate": "newData.isString() && (newData.val() === 'f' || newData.val() === 'd' || newData.val() === 'g')"
-            },
-            "$other": {
-              ".validate": false
-            }
+            "a": { ".validate": "newData.isNumber()" },
+            "l": { ".validate": "newData.isNumber()" },
+            "k": { ".validate": "newData.isNumber()" },
+            "n": { ".validate": "newData.isNumber()" },
+            "w": { ".validate": "newData.isString() && (newData.val() === 'f' || newData.val() === 'd' || newData.val() === 'g' || newData.val() === 'o')" },
+            "$other": { ".validate": false }
           },
-          "done": {
+          "done": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      },
+      "c": {
+        ".read": "auth != null && auth.token.email === 'admin@study-log.app'",
+        ".write": "auth != null && auth.token.email === 'admin@study-log.app'",
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          "pw": {
+            ".validate": "newData.hasChildren(['s','h','i'])",
+            "s": { ".validate": "newData.isString() && newData.val().length >= 8 && newData.val().length <= 64" },
+            "h": { ".validate": "newData.isString() && newData.val().length === 64" },
+            "i": { ".validate": "newData.isNumber() && newData.val() >= 1000 && newData.val() <= 1000000" },
+            "t": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          },
+          "pwu": {
+            ".write": "auth != null && auth.uid === $uid && !data.exists()",
             ".validate": "newData.isNumber()"
           },
-          "$other": {
-            ".validate": false
+          "b": {
+            ".validate": "newData.hasChildren(['t','d'])",
+            "t": { ".validate": "newData.isNumber()" },
+            "d": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 31536000000" },
+            "m": { ".validate": "newData.isString() && newData.val().length <= 300" },
+            "s": { ".validate": "newData.isString() && newData.val().length >= 8 && newData.val().length <= 64" },
+            "h": { ".validate": "newData.isString() && newData.val().length === 64" },
+            "i": { ".validate": "newData.isNumber() && newData.val() >= 1000 && newData.val() <= 1000000" },
+            "$other": { ".validate": false }
+          },
+          "ir": { ".validate": "newData.isNumber()" },
+          "fm": { ".validate": "newData.isNumber()" },
+          "md": {
+            "$mid": {
+              ".validate": "newData.hasChildren(['t','k','st','ti','m']) && (newData.child('k').val() !== 'p' || newData.hasChildren(['s','h','i']))",
+              "t": { ".validate": "newData.isNumber()" },
+              "k": { ".validate": "newData.isString() && (newData.val() === 'i' || newData.val() === 'p')" },
+              "st": { ".validate": "newData.isString() && (newData.val() === 'i' || newData.val() === 'w' || newData.val() === 'g' || newData.val() === 'a')" },
+              "ti": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80" },
+              "m": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 600" },
+              "s": { ".validate": "newData.isString() && newData.val().length >= 8 && newData.val().length <= 64" },
+              "h": { ".validate": "newData.isString() && newData.val().length === 64" },
+              "i": { ".validate": "newData.isNumber() && newData.val() >= 1000 && newData.val() <= 1000000" },
+              "$other": { ".validate": false }
+            }
+          },
+          "$other": { ".validate": false }
+        }
+      },
+      "ap": {
+        ".read": "auth != null && auth.token.email === 'admin@study-log.app'",
+        ".write": "auth != null && auth.token.email === 'admin@study-log.app'",
+        "$k": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 64" }
+      },
+      "ma": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.token.email === 'admin@study-log.app'",
+        "$mid": {
+          ".validate": "newData.hasChildren(['t','k','st','ti','m']) && (newData.child('k').val() !== 'p' || newData.hasChildren(['s','h','i']))",
+          "t": { ".validate": "newData.isNumber()" },
+          "k": { ".validate": "newData.isString() && (newData.val() === 'i' || newData.val() === 'p')" },
+          "st": { ".validate": "newData.isString() && (newData.val() === 'i' || newData.val() === 'w' || newData.val() === 'g' || newData.val() === 'a')" },
+          "ti": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80" },
+          "m": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 600" },
+          "s": { ".validate": "newData.isString() && newData.val().length >= 8 && newData.val().length <= 64" },
+          "h": { ".validate": "newData.isString() && newData.val().length === 64" },
+          "i": { ".validate": "newData.isNumber() && newData.val() >= 1000 && newData.val() <= 1000000" },
+          "$other": { ".validate": false }
+        }
+      },
+      "ak": {
+        ".read": "auth != null && auth.token.email === 'admin@study-log.app'",
+        ".write": "auth != null && auth.token.email === 'admin@study-log.app'",
+        "$mid": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && (root.child('lock').child('ma').child($mid).exists() || root.child('lock').child('c').child($uid).child('md').child($mid).exists())",
+            ".validate": "newData.isNumber()"
           }
+        }
+      },
+      "ins": {
+        ".read": "auth != null && auth.token.email === 'admin@study-log.app'",
+        ".write": "auth != null && auth.token.email === 'admin@study-log.app'",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['t','j'])",
+          "t": { ".validate": "newData.isNumber()" },
+          "r": { ".validate": "newData.isNumber()" },
+          "j": { ".validate": "newData.isString() && newData.val().length <= 950000" },
+          "$other": { ".validate": false }
         }
       }
     }
